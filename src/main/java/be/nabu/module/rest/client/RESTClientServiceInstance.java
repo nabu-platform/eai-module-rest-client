@@ -126,7 +126,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			if (response.getContent() != null) {
 				String responseContentType = MimeUtils.getContentType(response.getContent().getHeaders());
 				
-				if (response instanceof ContentPart) {
+				if (response.getContent() instanceof ContentPart) {
 					if (artifact.getConfiguration().getOutputAsStream() != null && artifact.getConfiguration().getOutputAsStream()) {
 						output.set("content", IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()));
 					}
