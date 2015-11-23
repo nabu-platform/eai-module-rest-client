@@ -32,6 +32,7 @@ import be.nabu.utils.mime.api.ModifiablePart;
 import be.nabu.utils.mime.impl.MimeHeader;
 import be.nabu.utils.mime.impl.MimeUtils;
 import be.nabu.utils.mime.impl.PlainMimeContentPart;
+import be.nabu.utils.mime.impl.PlainMimeEmptyPart;
 
 public class RESTClientServiceInstance implements ServiceInstance {
 
@@ -49,8 +50,11 @@ public class RESTClientServiceInstance implements ServiceInstance {
 	@Override
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 		try {
-			if (artifact.getConfiguration().getUrl() == null) {
-				throw new ServiceException("REST-CLIENT-1", "No url configured for: " + artifact.getId());
+			if (artifact.getConfiguration().getHost() == null) {
+				throw new ServiceException("REST-CLIENT-1", "No host configured for: " + artifact.getId());
+			}
+			if (artifact.getConfiguration().getPath() == null) {
+				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
 			}
 			Object object = input.get("content");
 			ModifiablePart part;
@@ -66,6 +70,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
 					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
 					new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json"));
+			}
+			else if (object == null) {
+				part = new PlainMimeEmptyPart(null);
 			}
 			else {
 				throw new ServiceException("REST-CLIENT-2", "Invalid content");
@@ -95,7 +102,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				part.setHeader(new MimeHeader("Content-Encoding", "gzip"));
 				part.setHeader(new MimeHeader("Accept-Encoding", "gzip"));
 			}
-			part.setHeader(new MimeHeader("Host", artifact.getConfiguration().getUrl().getAuthority()));
+			part.setHeader(new MimeHeader("Host", artifact.getConfiguration().getHost()));
 			
 			final String username = artifact.getConfiguration().getUsername();
 			final String password = artifact.getConfiguration().getPassword();
@@ -110,13 +117,33 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					return password;
 				}
 			};
+			
+			String path;
+			if (artifact.getConfiguration().getPath() == null) {
+				path = "/";
+			}
+			else {
+				path = artifact.getConfiguration().getPath();
+				ComplexContent pathContent = (ComplexContent) input.get("path");
+				if (pathContent != null) {
+					for (Element<?> child : pathContent.getType()) {
+						Object value = pathContent.get(child.getName());
+						path = path.replaceAll("\\{[\\s]*" + child.getName() + "\\b[^}]*\\}", value == null ? "" : value.toString());
+					}
+				}
+				if (!path.startsWith("/")) {
+					path = "/" + path;
+				}
+			}
+			
 			HTTPRequest request = new DefaultHTTPRequest(
 				artifact.getConfiguration().getMethod() == null ? "GET" : artifact.getConfiguration().getMethod().toString(),
-				artifact.getConfiguration().getUrl().getPath(),
+				path,
 				part);
 			
+			boolean isSecure = artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure();
 			DefaultHTTPClient client = Http.getTransactionable(executionContext, (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
-			HTTPResponse response = client.execute(request, principal, "https".equals(artifact.getConfiguration().getUrl().getScheme()), true);
+			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {
 				throw new ServiceException("REST-CLIENT-3", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage());
