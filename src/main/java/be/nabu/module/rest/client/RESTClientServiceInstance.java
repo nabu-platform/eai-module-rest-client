@@ -26,6 +26,8 @@ import be.nabu.libs.types.binding.api.Window;
 import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
 import be.nabu.utils.io.IOUtils;
+import be.nabu.utils.io.api.ByteBuffer;
+import be.nabu.utils.io.api.ReadableContainer;
 import be.nabu.utils.mime.api.ContentPart;
 import be.nabu.utils.mime.api.Header;
 import be.nabu.utils.mime.api.ModifiablePart;
@@ -146,7 +148,19 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {
-				throw new ServiceException("REST-CLIENT-3", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage());
+				byte[] content = null;
+				if (response.getContent() instanceof ContentPart) {
+					ReadableContainer<ByteBuffer> readable = ((ContentPart) response.getContent()).getReadable();
+					if (readable != null) {
+						try {
+							content = IOUtils.toBytes(readable);
+						}
+						finally {
+							readable.close();
+						}
+					}
+				}
+				throw new ServiceException("REST-CLIENT-3", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage() + (content == null ? "" : "\n" + new String(content)));
 			}
 			
 			ComplexContent output = artifact.getServiceInterface().getOutputDefinition().newInstance();
