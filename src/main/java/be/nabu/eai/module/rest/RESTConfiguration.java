@@ -1,4 +1,4 @@
-package be.nabu.module.rest;
+package be.nabu.eai.module.rest;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;

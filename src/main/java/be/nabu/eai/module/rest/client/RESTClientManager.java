@@ -1,4 +1,4 @@
-package be.nabu.module.rest.client;
+package be.nabu.eai.module.rest.client;
 
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.managers.base.JAXBArtifactManager;

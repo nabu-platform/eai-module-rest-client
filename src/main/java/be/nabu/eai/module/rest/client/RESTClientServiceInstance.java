@@ -1,4 +1,4 @@
-package be.nabu.module.rest.client;
+package be.nabu.eai.module.rest.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

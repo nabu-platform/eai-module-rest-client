@@ -1,13 +1,13 @@
-package be.nabu.module.rest.client;
+package be.nabu.eai.module.rest.client;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import be.nabu.eai.module.http.artifact.HTTPClientArtifact;
+import be.nabu.eai.module.rest.RESTConfiguration;
 import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
-import be.nabu.module.protocol.http.artifact.HTTPClientArtifact;
-import be.nabu.module.rest.RESTConfiguration;
 
 @XmlRootElement(name = "restClient")
 @XmlType(propOrder = { "host", "secure", "httpClient", "username", "password", "requestType", "charset", "gzip" })
