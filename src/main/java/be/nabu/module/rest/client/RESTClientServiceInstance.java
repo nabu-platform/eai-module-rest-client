@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
-import nabu.protocols.Http;
+import nabu.utils.Http;
 import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
 import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
