@@ -8,6 +8,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
 import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
 import be.nabu.libs.http.glue.GlueListener;
@@ -30,8 +31,8 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 	
 	private Structure input, output;
 	
-	public RESTClientArtifact(String id, ResourceContainer<?> directory) {
-		super(id, directory, "rest-client.xml", RESTClientConfiguration.class);
+	public RESTClientArtifact(String id, ResourceContainer<?> directory, Repository repository) {
+		super(id, directory, repository, "rest-client.xml", RESTClientConfiguration.class);
 	}
 
 	@Override

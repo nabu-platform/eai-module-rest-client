@@ -12,7 +12,7 @@ public class RESTClientManager extends JAXBArtifactManager<RESTClientConfigurati
 
 	@Override
 	protected RESTClientArtifact newInstance(String id, ResourceContainer<?> container, Repository repository) {
-		return new RESTClientArtifact(id, container);
+		return new RESTClientArtifact(id, container, repository);
 	}
 
 }

@@ -22,7 +22,7 @@ public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfigura
 
 	@Override
 	protected RESTClientArtifact newInstance(MainController controller, RepositoryEntry entry, Value<?>... values) throws IOException {
-		return new RESTClientArtifact(entry.getId(), entry.getContainer());
+		return new RESTClientArtifact(entry.getId(), entry.getContainer(), entry.getRepository());
 	}
 
 	@Override
