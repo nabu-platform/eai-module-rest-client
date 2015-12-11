@@ -22,6 +22,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private String host;
 	private Boolean secure;
 	
+	@EnvironmentSpecific
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
 	public HTTPClientArtifact getHttpClient() {
 		return httpClient;
@@ -29,6 +30,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setHttpClient(HTTPClientArtifact httpClient) {
 		this.httpClient = httpClient;
 	}
+	
 	@EnvironmentSpecific
 	public String getUsername() {
 		return username;
@@ -36,6 +38,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	
 	@EnvironmentSpecific
 	public String getPassword() {
 		return password;
@@ -43,24 +46,29 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	
 	public WebResponseType getRequestType() {
 		return requestType;
 	}
 	public void setRequestType(WebResponseType requestType) {
 		this.requestType = requestType;
 	}
+	
 	public String getCharset() {
 		return charset;
 	}
 	public void setCharset(String charset) {
 		this.charset = charset;
 	}
+	
+	@EnvironmentSpecific
 	public Boolean getGzip() {
 		return gzip;
 	}
 	public void setGzip(Boolean gzip) {
 		this.gzip = gzip;
 	}
+	
 	@EnvironmentSpecific
 	public String getHost() {
 		return host;
@@ -68,6 +76,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setHost(String host) {
 		this.host = host;
 	}
+	
 	@EnvironmentSpecific
 	public Boolean getSecure() {
 		return secure;
