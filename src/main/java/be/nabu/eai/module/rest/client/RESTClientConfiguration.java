@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import be.nabu.eai.api.EnvironmentSpecific;
 import be.nabu.eai.module.http.artifact.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
 import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
@@ -28,12 +29,14 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setHttpClient(HTTPClientArtifact httpClient) {
 		this.httpClient = httpClient;
 	}
+	@EnvironmentSpecific
 	public String getUsername() {
 		return username;
 	}
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	@EnvironmentSpecific
 	public String getPassword() {
 		return password;
 	}
@@ -58,12 +61,14 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setGzip(Boolean gzip) {
 		this.gzip = gzip;
 	}
+	@EnvironmentSpecific
 	public String getHost() {
 		return host;
 	}
 	public void setHost(String host) {
 		this.host = host;
 	}
+	@EnvironmentSpecific
 	public Boolean getSecure() {
 		return secure;
 	}
