@@ -4,15 +4,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.List;
 
 import nabu.utils.Http;
 import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
 import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
-import be.nabu.libs.http.client.DefaultHTTPClient;
-import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
+import be.nabu.libs.http.client.DefaultHTTPClient;
+import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
@@ -49,6 +50,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 		return artifact;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 		try {
@@ -62,7 +64,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
 			if (object instanceof InputStream) {
-				part = new PlainMimeContentPart(null, IOUtils.wrap((InputStream) object));
+				part = new PlainMimeContentPart(null, IOUtils.wrap((InputStream) object),
+					new MimeHeader("Content-Type", "application/octet-stream"),
+					new MimeHeader("Transfer-Encoding", "Chunked")
+				);
 			}
 			else if (object instanceof ComplexContent) {
 				MarshallableBinding binding = WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? new XMLBinding(((ComplexContent) object).getType(), charset) : new JSONBinding(((ComplexContent) object).getType(), charset);
@@ -71,7 +76,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				byte [] content = output.toByteArray();
 				part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
 					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
-					new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json"));
+					new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json")
+				);
 			}
 			else if (object == null) {
 				part = new PlainMimeEmptyPart(null);
@@ -79,6 +85,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			else {
 				throw new ServiceException("REST-CLIENT-2", "Invalid content");
 			}
+			
+			part.setHeader(new MimeHeader("Accept", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json"));
 			
 			Object header = input.get("header");
 			if (header instanceof ComplexContent) {
@@ -93,13 +101,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					}
 				}
 			}
-			
-			if (MimeUtils.getHeader("Content-Type", part.getHeaders()) == null) {
-				part.setHeader(new MimeHeader("Content-Type", "application/octet-stream"));
-			}
-			if (MimeUtils.getHeader("Content-Length", part.getHeaders()) == null) {
-				part.setHeader(new MimeHeader("Transfer-Encoding", "Chunked"));
-			}
+
 			if (artifact.getConfiguration().getGzip() != null && artifact.getConfiguration().getGzip()) {
 				part.setHeader(new MimeHeader("Content-Encoding", "gzip"));
 				part.setHeader(new MimeHeader("Accept-Encoding", "gzip"));
@@ -138,6 +140,25 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			
+			ComplexContent queryContent = (ComplexContent) input.get("query");
+			if (queryContent != null) {
+				boolean first = true;
+				for (Element<?> element : queryContent.getType()) {
+					List<String> values = (List<String>) queryContent.get(element.getName());
+					if (values != null && !values.isEmpty()) {
+						for (String value : values) {
+							if (first) {
+								first = false;
+								path += "?";
+							}
+							else {
+								path += "&";
+							}
+							path += element.getName() + "=" + value.replace("&", "&amp;");
+						}
+					}
+				}
+			}
 			HTTPRequest request = new DefaultHTTPRequest(
 				artifact.getConfiguration().getMethod() == null ? "GET" : artifact.getConfiguration().getMethod().toString(),
 				path,
