@@ -70,14 +70,20 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				);
 			}
 			else if (object instanceof ComplexContent) {
-				MarshallableBinding binding = WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? new XMLBinding(((ComplexContent) object).getType(), charset) : new JSONBinding(((ComplexContent) object).getType(), charset);
-				ByteArrayOutputStream output = new ByteArrayOutputStream();
-				binding.marshal(output, (ComplexContent) object);
-				byte [] content = output.toByteArray();
-				part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
-					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
-					new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json")
-				);
+				if (WebResponseType.FORM_ENCODED.equals(artifact.getConfiguration().getRequestType())) {
+					// TODO
+					part = null;
+				}
+				else {
+					MarshallableBinding binding = WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? new XMLBinding(((ComplexContent) object).getType(), charset) : new JSONBinding(((ComplexContent) object).getType(), charset);
+					ByteArrayOutputStream output = new ByteArrayOutputStream();
+					binding.marshal(output, (ComplexContent) object);
+					byte [] content = output.toByteArray();
+					part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
+						new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
+						new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json")
+					);
+				}
 			}
 			else if (object == null) {
 				part = new PlainMimeEmptyPart(null);
