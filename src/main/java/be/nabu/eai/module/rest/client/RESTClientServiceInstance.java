@@ -24,6 +24,7 @@ import be.nabu.libs.types.api.Element;
 import be.nabu.libs.types.binding.api.MarshallableBinding;
 import be.nabu.libs.types.binding.api.UnmarshallableBinding;
 import be.nabu.libs.types.binding.api.Window;
+import be.nabu.libs.types.binding.form.FormBinding;
 import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
 import be.nabu.utils.io.IOUtils;
@@ -70,20 +71,19 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				);
 			}
 			else if (object instanceof ComplexContent) {
-				if (WebResponseType.FORM_ENCODED.equals(artifact.getConfiguration().getRequestType())) {
-					// TODO
-					part = null;
+				MarshallableBinding binding;
+				switch(artifact.getConfiguration().getRequestType()) {
+					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
+					case JSON: binding = new JSONBinding(((ComplexContent) object).getType(), charset); break;
+					default: binding = new XMLBinding(((ComplexContent) object).getType(), charset);
 				}
-				else {
-					MarshallableBinding binding = WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? new XMLBinding(((ComplexContent) object).getType(), charset) : new JSONBinding(((ComplexContent) object).getType(), charset);
-					ByteArrayOutputStream output = new ByteArrayOutputStream();
-					binding.marshal(output, (ComplexContent) object);
-					byte [] content = output.toByteArray();
-					part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
-						new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
-						new MimeHeader("Content-Type", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json")
-					);
-				}
+				ByteArrayOutputStream output = new ByteArrayOutputStream();
+				binding.marshal(output, (ComplexContent) object);
+				byte [] content = output.toByteArray();
+				part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
+					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
+					new MimeHeader("Content-Type", artifact.getConfiguration().getRequestType().getMimeType())
+				);
 			}
 			else if (object == null) {
 				part = new PlainMimeEmptyPart(null);
