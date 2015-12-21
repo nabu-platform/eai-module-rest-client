@@ -75,7 +75,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				switch(artifact.getConfiguration().getRequestType()) {
 					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
 					case JSON: binding = new JSONBinding(((ComplexContent) object).getType(), charset); break;
-					default: binding = new XMLBinding(((ComplexContent) object).getType(), charset);
+					default: 
+						XMLBinding xmlBinding = new XMLBinding(((ComplexContent) object).getType(), charset);
+						// we had an instance where the other party was using dashes in the names
+						// it is impossible to model a field name with a dash in it in nabu so it is (currently) acceptable to set this boolean globally
+						// if we ever do need to support dashes, make this configurable, i didn't want to do that at the time of writing because not all bindings support it (atm)
+						xmlBinding.setCamelCaseDashes(true);
+						binding = xmlBinding;
 				}
 				ByteArrayOutputStream output = new ByteArrayOutputStream();
 				binding.marshal(output, (ComplexContent) object);
