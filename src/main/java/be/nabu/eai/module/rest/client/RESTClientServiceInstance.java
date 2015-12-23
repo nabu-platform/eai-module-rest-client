@@ -205,19 +205,22 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						output.set("content", IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()));
 					}
 					else if (artifact.getConfiguration().getOutput() != null) {
-						WebResponseType responseType;
-						if ("application/xml".equals(responseContentType)) {
-							responseType = WebResponseType.XML;
+						if (responseContentType == null && artifact.getConfiguration().getRequestType() != null) {
+							responseContentType = artifact.getConfiguration().getRequestType().getMimeType();
 						}
-						else if ("application/json".equals(responseContentType)) {
-							responseType = WebResponseType.JSON;
+						UnmarshallableBinding binding;
+						if ("application/x-www-form-urlencoded".equalsIgnoreCase(responseContentType)) {
+							binding = new FormBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
+						}
+						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)) {
+							binding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 						}
 						else {
-							responseType = WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? WebResponseType.XML : WebResponseType.JSON;
+							XMLBinding xmlBinding = new XMLBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
+							// cfr
+							xmlBinding.setCamelCaseDashes(true);
+							binding = xmlBinding;
 						}
-						UnmarshallableBinding binding = responseType == WebResponseType.XML
-							? new XMLBinding((ComplexType) artifact.getConfiguration().getOutput(), charset)
-							: new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 						output.set("content", binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]));
 					}
 				}
