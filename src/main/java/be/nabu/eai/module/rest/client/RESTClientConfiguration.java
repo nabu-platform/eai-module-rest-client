@@ -7,11 +7,12 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import be.nabu.eai.api.EnvironmentSpecific;
 import be.nabu.eai.module.http.artifact.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
+import be.nabu.eai.repository.artifacts.web.rest.WebAuthorizationType;
 import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "username", "password", "requestType", "charset", "gzip" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "charset", "gzip" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -21,6 +22,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private Boolean gzip;
 	private String host;
 	private Boolean secure;
+	private WebAuthorizationType preemptiveAuthorizationType;
 	
 	@EnvironmentSpecific
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
@@ -84,4 +86,13 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	public void setSecure(Boolean secure) {
 		this.secure = secure;
 	}
+	
+	@EnvironmentSpecific
+	public WebAuthorizationType getPreemptiveAuthorizationType() {
+		return preemptiveAuthorizationType;
+	}
+	public void setPreemptiveAuthorizationType(WebAuthorizationType preemptiveAuthorizationType) {
+		this.preemptiveAuthorizationType = preemptiveAuthorizationType;
+	}
+	
 }

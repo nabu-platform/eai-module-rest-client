@@ -92,6 +92,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 		Structure query = new Structure();
 		Structure requestHeader = new Structure();
 		Structure responseHeader = new Structure();
+		Structure authentication = new Structure();
 		try {
 			// input
 			input.setName("input");
@@ -123,6 +124,10 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			else if (getConfiguration().getInput() != null) {
 				input.add(new ComplexElementImpl("content", (ComplexType) getConfiguration().getInput(), input));
 			}
+			
+			authentication.add(new SimpleElementImpl<String>("username", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+			authentication.add(new SimpleElementImpl<String>("password", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+			input.add(new ComplexElementImpl("authentication", authentication, input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
 			
 			// output
 			output.setName("output");

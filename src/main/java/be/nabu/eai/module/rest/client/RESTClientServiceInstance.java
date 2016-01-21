@@ -12,8 +12,10 @@ import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
+import be.nabu.libs.http.client.BasicAuthentication;
 import be.nabu.libs.http.client.DefaultHTTPClient;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
+import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
@@ -120,8 +122,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			part.setHeader(new MimeHeader("Host", artifact.getConfiguration().getHost()));
 			
-			final String username = artifact.getConfiguration().getUsername();
-			final String password = artifact.getConfiguration().getPassword();
+			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
+			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
+			
 			BasicPrincipal principal = artifact.getConfiguration().getUsername() == null ? null : new BasicPrincipal() {
 				private static final long serialVersionUID = 1L;
 				@Override
@@ -175,6 +178,17 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				artifact.getConfiguration().getMethod() == null ? "GET" : artifact.getConfiguration().getMethod().toString(),
 				path,
 				part);
+			
+			if (artifact.getConfiguration().getPreemptiveAuthorizationType() != null) {
+				switch(artifact.getConfiguration().getPreemptiveAuthorizationType()) {
+					case BASIC:
+						request.getContent().setHeader(new MimeHeader(HTTPUtils.SERVER_AUTHENTICATE_RESPONSE, new BasicAuthentication().authenticate(principal, "basic")));
+					break;
+					case BEARER:
+						request.getContent().setHeader(new MimeHeader(HTTPUtils.SERVER_AUTHENTICATE_RESPONSE, "Bearer " + principal.getName()));
+					break;
+				}
+			}
 			
 			boolean isSecure = artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure();
 			DefaultHTTPClient client = Http.getTransactionable(executionContext, (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
