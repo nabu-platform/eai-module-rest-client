@@ -63,7 +63,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			if (artifact.getConfiguration().getPath() == null) {
 				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
 			}
-			Object object = input.get("content");
+			Object object = input == null ? null : input.get("content");
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
 			if (object instanceof InputStream) {
@@ -100,9 +100,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				throw new ServiceException("REST-CLIENT-2", "Invalid content");
 			}
 			
-			part.setHeader(new MimeHeader("Accept", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? "application/xml" : "application/json"));
+			part.setHeader(new MimeHeader("Accept", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? WebResponseType.XML.getMimeType() : WebResponseType.JSON.getMimeType()));
 			
-			Object header = input.get("header");
+			Object header = input == null ? null : input.get("header");
 			if (header instanceof ComplexContent) {
 				for (Element<?> element : ((ComplexContent) header).getType()) {
 					Object values = ((ComplexContent) header).get(element.getName());
@@ -143,7 +143,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			else {
 				path = artifact.getConfiguration().getPath();
-				ComplexContent pathContent = (ComplexContent) input.get("path");
+				ComplexContent pathContent = input == null ? null : (ComplexContent) input.get("path");
 				if (pathContent != null) {
 					for (Element<?> child : pathContent.getType()) {
 						Object value = pathContent.get(child.getName());
@@ -155,7 +155,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			
-			ComplexContent queryContent = (ComplexContent) input.get("query");
+			ComplexContent queryContent = input == null ? null : (ComplexContent) input.get("query");
 			if (queryContent != null) {
 				boolean first = true;
 				for (Element<?> element : queryContent.getType()) {
@@ -191,7 +191,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			
 			boolean isSecure = artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure();
-			DefaultHTTPClient client = Http.getTransactionable(executionContext, (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
+			DefaultHTTPClient client = Http.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {
@@ -213,7 +213,6 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			ComplexContent output = artifact.getServiceInterface().getOutputDefinition().newInstance();
 			if (response.getContent() != null) {
 				String responseContentType = MimeUtils.getContentType(response.getContent().getHeaders());
-				
 				if (response.getContent() instanceof ContentPart) {
 					if (artifact.getConfiguration().getOutputAsStream() != null && artifact.getConfiguration().getOutputAsStream()) {
 						output.set("content", IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()));
