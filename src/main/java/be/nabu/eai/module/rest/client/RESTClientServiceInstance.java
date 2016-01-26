@@ -124,8 +124,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
 			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
-			
-			BasicPrincipal principal = artifact.getConfiguration().getUsername() == null ? null : new BasicPrincipal() {
+
+			BasicPrincipal principal = username == null ? null : new BasicPrincipal() {
 				private static final long serialVersionUID = 1L;
 				@Override
 				public String getName() {
