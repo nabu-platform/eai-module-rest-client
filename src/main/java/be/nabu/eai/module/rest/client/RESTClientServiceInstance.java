@@ -16,6 +16,7 @@ import be.nabu.libs.http.client.BasicAuthentication;
 import be.nabu.libs.http.client.DefaultHTTPClient;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.core.HTTPUtils;
+import be.nabu.libs.http.glue.GlueListener;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
@@ -234,7 +235,11 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							xmlBinding.setCamelCaseDashes(true);
 							binding = xmlBinding;
 						}
-						output.set("content", binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]));
+						ComplexContent unmarshal = binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]);
+						if (artifact.getConfiguration().getSanitizeOutput() != null && artifact.getConfiguration().getSanitizeOutput()) {
+							unmarshal = (ComplexContent) GlueListener.sanitize(unmarshal);
+						}
+						output.set("content", unmarshal);
 					}
 				}
 				Element<?> element = output.getType().get("header");

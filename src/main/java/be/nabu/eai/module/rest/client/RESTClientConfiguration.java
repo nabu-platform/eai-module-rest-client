@@ -12,7 +12,7 @@ import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "charset", "gzip" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "charset", "gzip", "sanitizeOutput" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -21,7 +21,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private String charset;
 	private Boolean gzip;
 	private String host;
-	private Boolean secure;
+	private Boolean secure, sanitizeOutput;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	
 	@EnvironmentSpecific
@@ -93,6 +93,13 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	}
 	public void setPreemptiveAuthorizationType(WebAuthorizationType preemptiveAuthorizationType) {
 		this.preemptiveAuthorizationType = preemptiveAuthorizationType;
+	}
+	
+	public Boolean getSanitizeOutput() {
+		return sanitizeOutput;
+	}
+	public void setSanitizeOutput(Boolean sanitizeOutput) {
+		this.sanitizeOutput = sanitizeOutput;
 	}
 	
 }
