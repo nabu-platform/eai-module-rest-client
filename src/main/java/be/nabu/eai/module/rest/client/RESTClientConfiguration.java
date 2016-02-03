@@ -5,10 +5,10 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import be.nabu.eai.api.EnvironmentSpecific;
-import be.nabu.eai.module.http.artifact.HTTPClientArtifact;
+import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
-import be.nabu.eai.repository.artifacts.web.rest.WebAuthorizationType;
-import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
+import be.nabu.eai.module.rest.WebAuthorizationType;
+import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")

@@ -7,8 +7,8 @@ import java.util.Collection;
 import java.util.List;
 
 import nabu.protocols.http.client.Services;
-import be.nabu.eai.repository.artifacts.web.rest.WebResponseType;
-import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
+import be.nabu.eai.module.rest.RESTUtils;
+import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
@@ -110,7 +110,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					if (values instanceof Collection) {
 						for (Object value : (Collection<?>) values) {
 							if (value != null) {
-								part.setHeader(new MimeHeader(WebRestArtifact.fieldToHeader(element.getName()), value.toString()));
+								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), value.toString()));
 							}
 						}
 					}
@@ -245,7 +245,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				Element<?> element = output.getType().get("header");
 				if (element != null) {
 					for (Element<?> child : (ComplexType) element.getType()) {
-						Header[] headers = MimeUtils.getHeaders(WebRestArtifact.fieldToHeader(child.getName()), response.getContent().getHeaders());
+						Header[] headers = MimeUtils.getHeaders(RESTUtils.fieldToHeader(child.getName()), response.getContent().getHeaders());
 						if (headers != null) {
 							for (int i = 0; i < headers.length; i++) {
 								output.set("header/" + child.getName() + "[" + i + "]", headers[i].getValue());

@@ -8,9 +8,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import be.nabu.eai.module.rest.RESTUtils;
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
-import be.nabu.eai.repository.artifacts.web.rest.WebRestArtifact;
 import be.nabu.libs.http.glue.GlueListener;
 import be.nabu.libs.resources.api.ResourceContainer;
 import be.nabu.libs.services.api.DefinedService;
@@ -86,8 +86,8 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 	}
 	
 	private void rebuildInterface() {
-		Structure input = this.input == null ? new Structure() : WebRestArtifact.clean(this.input);
-		Structure output = this.output == null ? new Structure() : WebRestArtifact.clean(this.output);
+		Structure input = this.input == null ? new Structure() : RESTUtils.clean(this.input);
+		Structure output = this.output == null ? new Structure() : RESTUtils.clean(this.output);
 		Structure path = new Structure();
 		Structure query = new Structure();
 		Structure requestHeader = new Structure();
@@ -106,7 +106,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			}
 			if (getConfiguration().getRequestHeaders() != null && !getConfiguration().getRequestHeaders().trim().isEmpty()) {
 				for (String name : getConfiguration().getRequestHeaders().split("[\\s,]+")) {
-					requestHeader.add(new SimpleElementImpl<String>(WebRestArtifact.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), requestHeader, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0)));
+					requestHeader.add(new SimpleElementImpl<String>(RESTUtils.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), requestHeader, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0)));
 				}
 				input.add(new ComplexElementImpl("header", requestHeader, input));
 			}
@@ -133,7 +133,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			output.setName("output");
 			if (getConfiguration().getResponseHeaders() != null && !getConfiguration().getResponseHeaders().trim().isEmpty()) {
 				for (String name : getConfiguration().getResponseHeaders().split("[\\s,]+")) {
-					responseHeader.add(new SimpleElementImpl<String>(WebRestArtifact.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), responseHeader));
+					responseHeader.add(new SimpleElementImpl<String>(RESTUtils.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), responseHeader));
 				}
 				output.add(new ComplexElementImpl("header", responseHeader, output));
 			}

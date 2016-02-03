@@ -4,9 +4,9 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nabu</groupId>
-	<artifactId>eai-module-rest</artifactId>
+	<artifactId>eai-module-rest-client</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<name>eai-module-rest</name>
+	<name>eai-module-rest-client</name>
 
 	<build>
 		<plugins>
@@ -44,7 +44,13 @@
 		</dependency>
 		<dependency>
 			<groupId>nabu</groupId>
-			<artifactId>eai-module-http</artifactId>
+			<artifactId>eai-module-http-client</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>nabu</groupId>
+			<artifactId>eai-module-rest</artifactId>
 			<version>1.0-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
@@ -55,7 +61,7 @@
 			<uniqueVersion>false</uniqueVersion>
 			<id>nabu</id>
 			<name>Nabu Maven Repository</name>
-			<url>http://localhost:5555</url>
+			<url>http://localhost:5555/maven</url>
 			<layout>default</layout>
 		</repository>
 	</distributionManagement>
