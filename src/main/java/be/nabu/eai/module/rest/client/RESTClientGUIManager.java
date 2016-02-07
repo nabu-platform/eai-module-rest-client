@@ -12,7 +12,7 @@ import be.nabu.libs.property.api.Value;
 public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfiguration, RESTClientArtifact> {
 
 	public RESTClientGUIManager() {
-		super("REST Client", RESTClientArtifact.class, new RESTClientManager(), RESTClientConfiguration.class);
+		super("REST Client Service", RESTClientArtifact.class, new RESTClientManager(), RESTClientConfiguration.class);
 	}
 
 	@Override
@@ -27,6 +27,6 @@ public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfigura
 
 	@Override
 	public String getCategory() {
-		return "Protocols";
+		return "Services";
 	}
 }
