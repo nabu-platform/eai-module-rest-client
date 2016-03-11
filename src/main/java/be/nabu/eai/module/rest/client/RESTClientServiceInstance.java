@@ -14,6 +14,7 @@ import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
 import be.nabu.libs.http.client.BasicAuthentication;
 import be.nabu.libs.http.client.DefaultHTTPClient;
+import be.nabu.libs.http.client.NTLMPrincipalImpl;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.http.glue.GlueListener;
@@ -126,17 +127,30 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
 			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
 
-			BasicPrincipal principal = username == null ? null : new BasicPrincipal() {
-				private static final long serialVersionUID = 1L;
-				@Override
-				public String getName() {
-					return username;
+			BasicPrincipal principal = null;
+			if (username != null) {
+				int index = username.indexOf('/');
+				if (index < 0) {
+					index = username.indexOf('\\');
 				}
-				@Override
-				public String getPassword() {
-					return password;
+				if (index < 0) {
+					principal = new BasicPrincipal() {
+						private static final long serialVersionUID = 1L;
+						@Override
+						public String getName() {
+							return username;
+						}
+						@Override
+						public String getPassword() {
+							return password;
+						}
+					};
 				}
-			};
+				// create an NTLM principal
+				else if (username != null) {
+					principal = new NTLMPrincipalImpl(username.substring(0, index), username.substring(index + 1), password);
+				}
+			}
 			
 			String path;
 			if (artifact.getConfiguration().getPath() == null) {
