@@ -78,7 +78,14 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				MarshallableBinding binding;
 				switch(artifact.getConfiguration().getRequestType()) {
 					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
-					case JSON: binding = new JSONBinding(((ComplexContent) object).getType(), charset); break;
+					case JSON: 
+						JSONBinding jsonBinding = new JSONBinding(((ComplexContent) object).getType(), charset);
+						// TODO: make this configurable?
+						jsonBinding.setIgnoreRootIfArrayWrapper(true);
+						// see below in XML binding
+						jsonBinding.setCamelCaseDashes(true);
+						binding = jsonBinding;
+					break;
 					default: 
 						XMLBinding xmlBinding = new XMLBinding(((ComplexContent) object).getType(), charset);
 						// we had an instance where the other party was using dashes in the names
