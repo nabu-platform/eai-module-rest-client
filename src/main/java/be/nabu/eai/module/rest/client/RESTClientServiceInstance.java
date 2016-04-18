@@ -248,7 +248,11 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							binding = new FormBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 						}
 						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)) {
-							binding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
+							JSONBinding jsonBinding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
+							// cfr
+							jsonBinding.setIgnoreRootIfArrayWrapper(true);
+							jsonBinding.setCamelCaseDashes(true);
+							binding = jsonBinding;
 						}
 						else {
 							XMLBinding xmlBinding = new XMLBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
