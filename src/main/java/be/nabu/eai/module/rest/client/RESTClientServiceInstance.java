@@ -184,6 +184,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					List<String> values = (List<String>) queryContent.get(element.getName());
 					if (values != null && !values.isEmpty()) {
 						for (String value : values) {
+							if (value == null) {
+								continue;
+							}
 							if (first) {
 								first = false;
 								path += "?";
