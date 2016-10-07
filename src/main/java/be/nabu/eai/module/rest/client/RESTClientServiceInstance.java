@@ -31,6 +31,7 @@ import be.nabu.libs.types.binding.api.Window;
 import be.nabu.libs.types.binding.form.FormBinding;
 import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
+import be.nabu.libs.types.map.MapTypeGenerator;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.ReadableContainer;
@@ -204,7 +205,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				path,
 				part);
 			
-			if (artifact.getConfiguration().getPreemptiveAuthorizationType() != null) {
+			if (artifact.getConfiguration().getPreemptiveAuthorizationType() != null && principal != null) {
 				switch(artifact.getConfiguration().getPreemptiveAuthorizationType()) {
 					case BASIC:
 						request.getContent().setHeader(new MimeHeader(HTTPUtils.SERVER_AUTHENTICATE_RESPONSE, new BasicAuthentication().authenticate(principal, "basic")));
@@ -255,6 +256,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							// cfr
 							jsonBinding.setIgnoreRootIfArrayWrapper(true);
 							jsonBinding.setCamelCaseDashes(true);
+							// we allow dynamic types to be generated for parsing reasons but do not allow them to be added back into the type
+							// this necessitates that there is a key value array that can hold them
+							jsonBinding.setAllowDynamicElements(true);
+							jsonBinding.setComplexTypeGenerator(new MapTypeGenerator());
 							binding = jsonBinding;
 						}
 						else {
