@@ -21,6 +21,7 @@ import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.base.ComplexElementImpl;
 import be.nabu.libs.types.base.SimpleElementImpl;
 import be.nabu.libs.types.base.ValueImpl;
+import be.nabu.libs.types.properties.AliasProperty;
 import be.nabu.libs.types.properties.MaxOccursProperty;
 import be.nabu.libs.types.properties.MinOccursProperty;
 import be.nabu.libs.types.structure.Structure;
@@ -100,13 +101,19 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			
 			if (getConfiguration().getQueryParameters() != null && !getConfiguration().getQueryParameters().trim().isEmpty()) {
 				for (String name : getConfiguration().getQueryParameters().split("[\\s,]+")) {
-					query.add(new SimpleElementImpl<String>(name, SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), query, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0)));
+					String cleanupName = name.replaceAll("[^\\w]+", "_");
+					SimpleElementImpl<String> element = new SimpleElementImpl<String>(cleanupName, SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), query, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0));
+					if (!cleanupName.equals(name)) {
+						element.setProperty(new ValueImpl<String>(AliasProperty.getInstance(), name));
+					}
+					query.add(element);
 				}
 				input.add(new ComplexElementImpl("query", query, input));
 			}
 			if (getConfiguration().getRequestHeaders() != null && !getConfiguration().getRequestHeaders().trim().isEmpty()) {
 				for (String name : getConfiguration().getRequestHeaders().split("[\\s,]+")) {
-					requestHeader.add(new SimpleElementImpl<String>(RESTUtils.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), requestHeader, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0)));
+					SimpleElementImpl<String> element = new SimpleElementImpl<String>(RESTUtils.headerToField(name), SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), requestHeader, new ValueImpl<Integer>(MaxOccursProperty.getInstance(), 0));
+					requestHeader.add(element);
 				}
 				input.add(new ComplexElementImpl("header", requestHeader, input));
 			}

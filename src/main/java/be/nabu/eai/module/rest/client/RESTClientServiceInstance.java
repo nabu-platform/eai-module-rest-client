@@ -18,6 +18,7 @@ import be.nabu.libs.http.client.NTLMPrincipalImpl;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.http.glue.GlueListener;
+import be.nabu.libs.property.ValueUtils;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
@@ -32,6 +33,7 @@ import be.nabu.libs.types.binding.form.FormBinding;
 import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
 import be.nabu.libs.types.map.MapTypeGenerator;
+import be.nabu.libs.types.properties.AliasProperty;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.ReadableContainer;
@@ -195,7 +197,11 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							else {
 								path += "&";
 							}
-							path += element.getName() + "=" + value.replace("&", "&amp;");
+							String name = ValueUtils.getValue(AliasProperty.getInstance(), element.getProperties());
+							if (name == null) {
+								name = element.getName();
+							}
+							path += name + "=" + value.replace("&", "&amp;");
 						}
 					}
 				}
