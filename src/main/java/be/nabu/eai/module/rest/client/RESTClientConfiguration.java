@@ -12,7 +12,7 @@ import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "charset", "gzip", "sanitizeOutput" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -23,6 +23,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private String host;
 	private Boolean secure, sanitizeOutput;
 	private WebAuthorizationType preemptiveAuthorizationType;
+	private Boolean validateInput, validateOutput;
 	
 	@EnvironmentSpecific
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
@@ -100,6 +101,19 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	}
 	public void setSanitizeOutput(Boolean sanitizeOutput) {
 		this.sanitizeOutput = sanitizeOutput;
+	}
+	
+	public Boolean getValidateInput() {
+		return validateInput;
+	}
+	public void setValidateInput(Boolean validateInput) {
+		this.validateInput = validateInput;
+	}
+	public Boolean getValidateOutput() {
+		return validateOutput;
+	}
+	public void setValidateOutput(Boolean validateOutput) {
+		this.validateOutput = validateOutput;
 	}
 	
 }

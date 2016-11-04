@@ -34,6 +34,7 @@ import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
 import be.nabu.libs.types.map.MapTypeGenerator;
 import be.nabu.libs.types.properties.AliasProperty;
+import be.nabu.libs.validator.api.Validator;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.io.api.ByteBuffer;
 import be.nabu.utils.io.api.ReadableContainer;
@@ -58,7 +59,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 		return artifact;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 		try {
@@ -78,6 +79,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				);
 			}
 			else if (object instanceof ComplexContent) {
+				if (artifact.getConfig().getValidateInput() != null && artifact.getConfig().getValidateInput()) {
+					Validator validator = ((ComplexContent) object).getType().createValidator();
+					List validations = validator.validate(object);
+					if (validations != null && !validations.isEmpty()) {
+						throw new ServiceException("REST-CLIENT-5", "The input provided to the rest client is invalid: " + validations);
+					}
+				}
 				MarshallableBinding binding;
 				switch(artifact.getConfiguration().getRequestType()) {
 					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
@@ -109,7 +117,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				part = new PlainMimeEmptyPart(null);
 			}
 			else {
-				throw new ServiceException("REST-CLIENT-2", "Invalid content");
+				throw new ServiceException("REST-CLIENT-3", "Invalid content");
 			}
 			
 			part.setHeader(new MimeHeader("Accept", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? WebResponseType.XML.getMimeType() : WebResponseType.JSON.getMimeType()));
@@ -239,7 +247,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						}
 					}
 				}
-				throw new ServiceException("REST-CLIENT-3", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage() + (content == null ? "" : "\n" + new String(content)));
+				throw new ServiceException("REST-CLIENT-4", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage() + (content == null ? "" : "\n" + new String(content)));
 			}
 			
 			ComplexContent output = artifact.getServiceInterface().getOutputDefinition().newInstance();
@@ -275,6 +283,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							binding = xmlBinding;
 						}
 						ComplexContent unmarshal = binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]);
+						if (artifact.getConfig().getValidateOutput() != null && artifact.getConfig().getValidateOutput()) {
+							Validator validator = unmarshal.getType().createValidator();
+							List validations = validator.validate(unmarshal);
+							if (validations != null && !validations.isEmpty()) {
+								throw new ServiceException("REST-CLIENT-6", "The returned content from the server is invalid: " + validations);
+							}
+						}
 						if (artifact.getConfiguration().getSanitizeOutput() != null && artifact.getConfiguration().getSanitizeOutput()) {
 							unmarshal = (ComplexContent) GlueListener.sanitize(unmarshal);
 						}
