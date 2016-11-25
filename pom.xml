@@ -45,11 +45,6 @@
 		</dependency>
 		<dependency>
 			<groupId>nabu</groupId>
-			<artifactId>eai-module-web-application</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>nabu</groupId>
 			<artifactId>eai-module-rest</artifactId>
 			<scope>provided</scope>
 		</dependency>
