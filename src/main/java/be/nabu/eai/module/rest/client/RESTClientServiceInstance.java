@@ -2,6 +2,7 @@ package be.nabu.eai.module.rest.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
@@ -70,6 +71,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
 			}
 			Object object = input == null ? null : input.get("content");
+			URI uri = input == null ? null : (URI) input.get("uri");
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
 			if (object instanceof InputStream) {
@@ -140,7 +142,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				part.setHeader(new MimeHeader("Content-Encoding", "gzip"));
 				part.setHeader(new MimeHeader("Accept-Encoding", "gzip"));
 			}
-			part.setHeader(new MimeHeader("Host", artifact.getConfiguration().getHost()));
+			part.setHeader(new MimeHeader("Host", uri == null || uri.getHost() == null ? artifact.getConfiguration().getHost() : uri.getAuthority()));
 			
 			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
 			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
@@ -170,12 +172,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			
-			String path;
-			if (artifact.getConfiguration().getPath() == null) {
-				path = "/";
-			}
-			else {
-				path = artifact.getConfiguration().getPath();
+			String path = uri == null || uri.getPath() == null ? "/" : uri.getPath();
+			if (artifact.getConfiguration().getPath() != null) {
+				path += artifact.getConfiguration().getPath();
 				ComplexContent pathContent = input == null ? null : (ComplexContent) input.get("path");
 				if (pathContent != null) {
 					for (Element<?> child : pathContent.getType()) {

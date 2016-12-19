@@ -2,6 +2,7 @@ package be.nabu.eai.module.rest.client;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -98,6 +99,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			// input
 			input.setName("input");
 			input.add(new SimpleElementImpl<String>("transactionId", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+			input.add(new SimpleElementImpl<URI>("endpoint", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(URI.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
 			
 			if (getConfiguration().getQueryParameters() != null && !getConfiguration().getQueryParameters().trim().isEmpty()) {
 				for (String name : getConfiguration().getQueryParameters().split("[\\s,]+")) {
