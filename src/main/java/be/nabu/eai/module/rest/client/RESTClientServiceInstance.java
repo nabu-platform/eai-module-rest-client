@@ -71,7 +71,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
 			}
 			Object object = input == null ? null : input.get("content");
-			URI uri = input == null ? null : (URI) input.get("uri");
+			URI uri = input == null ? null : (URI) input.get("endpoint");
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
 			if (object instanceof InputStream) {
@@ -174,7 +174,14 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			String path = uri == null || uri.getPath() == null ? "/" : uri.getPath();
 			if (artifact.getConfiguration().getPath() != null) {
-				path += artifact.getConfiguration().getPath();
+				String configuredPath = artifact.getConfig().getPath();
+				if (configuredPath.startsWith("/")) {
+					configuredPath = configuredPath.substring(1);
+				}
+				if (!path.endsWith("/")) {
+					path += "/";
+				}
+				path += configuredPath;
 				ComplexContent pathContent = input == null ? null : (ComplexContent) input.get("path");
 				if (pathContent != null) {
 					for (Element<?> child : pathContent.getType()) {
