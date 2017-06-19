@@ -13,8 +13,8 @@ import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
+import be.nabu.libs.http.api.client.HTTPClient;
 import be.nabu.libs.http.client.BasicAuthentication;
-import be.nabu.libs.http.client.DefaultHTTPClient;
 import be.nabu.libs.http.client.NTLMPrincipalImpl;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.core.HTTPUtils;
@@ -237,7 +237,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			
 			boolean isSecure = artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure();
-			DefaultHTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
+			HTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {
