@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import be.nabu.eai.api.Advanced;
 import be.nabu.eai.api.EnvironmentSpecific;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
@@ -12,7 +13,7 @@ import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -24,7 +25,9 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private Boolean secure, sanitizeOutput;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	private Boolean validateInput, validateOutput;
+	private boolean lenient = true;
 	
+	@Advanced
 	@EnvironmentSpecific
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
 	public HTTPClientArtifact getHttpClient() {
@@ -57,6 +60,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 		this.requestType = requestType;
 	}
 	
+	@Advanced
 	public String getCharset() {
 		return charset;
 	}
@@ -64,6 +68,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 		this.charset = charset;
 	}
 	
+	@Advanced
 	@EnvironmentSpecific
 	public Boolean getGzip() {
 		return gzip;
@@ -88,6 +93,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 		this.secure = secure;
 	}
 	
+	@Advanced
 	@EnvironmentSpecific
 	public WebAuthorizationType getPreemptiveAuthorizationType() {
 		return preemptiveAuthorizationType;
@@ -96,6 +102,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 		this.preemptiveAuthorizationType = preemptiveAuthorizationType;
 	}
 	
+	@Advanced
 	public Boolean getSanitizeOutput() {
 		return sanitizeOutput;
 	}
@@ -120,6 +127,14 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	}
 	public void setResponseType(WebResponseType responseType) {
 		this.responseType = responseType;
+	}
+	
+	@Advanced
+	public boolean isLenient() {
+		return lenient;
+	}
+	public void setLenient(boolean lenient) {
+		this.lenient = lenient;
 	}
 	
 }

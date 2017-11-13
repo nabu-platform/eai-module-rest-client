@@ -280,12 +280,18 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							// this necessitates that there is a key value array that can hold them
 							jsonBinding.setAllowDynamicElements(true);
 							jsonBinding.setComplexTypeGenerator(new MapTypeGenerator());
+							if (artifact.getConfig().isLenient()) {
+								jsonBinding.setIgnoreUnknownElements(true);
+							}
 							binding = jsonBinding;
 						}
 						else {
 							XMLBinding xmlBinding = new XMLBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 							// cfr
 							xmlBinding.setCamelCaseDashes(true);
+							if (artifact.getConfig().isLenient()) {
+								xmlBinding.setIgnoreUndefined(true);
+							}
 							binding = xmlBinding;
 						}
 						ComplexContent unmarshal = binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]);
