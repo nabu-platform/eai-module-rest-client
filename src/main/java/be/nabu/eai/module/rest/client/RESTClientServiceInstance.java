@@ -74,13 +74,17 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			URI uri = input == null ? null : (URI) input.get("endpoint");
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
+			WebResponseType requestType = artifact.getConfiguration().getRequestType();
 			if (object instanceof InputStream) {
 				part = new PlainMimeContentPart(null, IOUtils.wrap((InputStream) object),
-					new MimeHeader("Content-Type", "application/octet-stream"),
+					new MimeHeader("Content-Type", requestType == null ? "application/octet-stream" : requestType.getMimeType()),
 					new MimeHeader("Transfer-Encoding", "Chunked")
 				);
 			}
 			else if (object instanceof ComplexContent) {
+				if (requestType == null) {
+					requestType = WebResponseType.XML;
+				}
 				if (artifact.getConfig().getValidateInput() != null && artifact.getConfig().getValidateInput()) {
 					Validator validator = ((ComplexContent) object).getType().createValidator();
 					List validations = validator.validate(object);
@@ -89,7 +93,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					}
 				}
 				MarshallableBinding binding;
-				switch(artifact.getConfiguration().getRequestType()) {
+				switch(requestType) {
 					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
 					case JSON: 
 						JSONBinding jsonBinding = new JSONBinding(((ComplexContent) object).getType(), charset);
@@ -112,7 +116,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				byte [] content = output.toByteArray();
 				part = new PlainMimeContentPart(null, IOUtils.wrap(content, true), 
 					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
-					new MimeHeader("Content-Type", artifact.getConfiguration().getRequestType().getMimeType())
+					new MimeHeader("Content-Type", requestType.getMimeType())
 				);
 			}
 			else if (object == null) {
@@ -122,7 +126,11 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				throw new ServiceException("REST-CLIENT-3", "Invalid content");
 			}
 			
-			part.setHeader(new MimeHeader("Accept", WebResponseType.XML.equals(artifact.getConfiguration().getRequestType()) ? WebResponseType.XML.getMimeType() : WebResponseType.JSON.getMimeType()));
+			WebResponseType responseType = artifact.getConfiguration().getResponseType();
+			if (responseType == null) {
+				responseType = WebResponseType.XML;
+			}
+			part.setHeader(new MimeHeader("Accept", responseType.getMimeType()));
 			
 			Object header = input == null ? null : input.get("header");
 			if (header instanceof ComplexContent) {
@@ -264,8 +272,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						output.set("content", IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()));
 					}
 					else if (artifact.getConfiguration().getOutput() != null) {
-						if (responseContentType == null && artifact.getConfiguration().getRequestType() != null) {
-							responseContentType = artifact.getConfiguration().getRequestType().getMimeType();
+						if (responseContentType == null && requestType != null) {
+							responseContentType = requestType.getMimeType();
 						}
 						UnmarshallableBinding binding;
 						if ("application/x-www-form-urlencoded".equalsIgnoreCase(responseContentType)) {
