@@ -11,6 +11,7 @@ import nabu.protocols.http.client.Services;
 import be.nabu.eai.module.rest.RESTUtils;
 import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
+import be.nabu.libs.converter.ConverterFactory;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
 import be.nabu.libs.http.api.client.HTTPClient;
@@ -20,6 +21,7 @@ import be.nabu.libs.http.core.DefaultHTTPRequest;
 import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.http.glue.GlueListener;
 import be.nabu.libs.property.ValueUtils;
+import be.nabu.libs.resources.URIUtils;
 import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
@@ -27,6 +29,7 @@ import be.nabu.libs.services.api.ServiceInstance;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.Element;
+import be.nabu.libs.types.base.CollectionFormat;
 import be.nabu.libs.types.binding.api.MarshallableBinding;
 import be.nabu.libs.types.binding.api.UnmarshallableBinding;
 import be.nabu.libs.types.binding.api.Window;
@@ -35,6 +38,7 @@ import be.nabu.libs.types.binding.json.JSONBinding;
 import be.nabu.libs.types.binding.xml.XMLBinding;
 import be.nabu.libs.types.map.MapTypeGenerator;
 import be.nabu.libs.types.properties.AliasProperty;
+import be.nabu.libs.types.properties.CollectionFormatProperty;
 import be.nabu.libs.validator.api.Validator;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.io.api.ByteBuffer;
@@ -60,6 +64,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 		return artifact;
 	}
 
+	private String escapeQuery(String value) {
+		return URIUtils.encodeURL(value);
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
@@ -155,13 +163,16 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
 			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
 
+			// currently if preemptive is filled in, you can't do ntlm, only basic & bearer both of which don't support domain
+			boolean allowNtlm = artifact.getConfiguration().getPreemptiveAuthorizationType() == null;
+			
 			BasicPrincipal principal = null;
 			if (username != null) {
 				int index = username.indexOf('/');
 				if (index < 0) {
 					index = username.indexOf('\\');
 				}
-				if (index < 0) {
+				if (index < 0 || !allowNtlm) {
 					principal = new BasicPrincipal() {
 						private static final long serialVersionUID = 1L;
 						@Override
@@ -204,14 +215,41 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			ComplexContent queryContent = input == null ? null : (ComplexContent) input.get("query");
 			if (queryContent != null) {
-				boolean first = true;
+				boolean first = path.indexOf('?') < 0;
 				for (Element<?> element : queryContent.getType()) {
-					List<String> values = (List<String>) queryContent.get(element.getName());
-					if (values != null && !values.isEmpty()) {
-						for (String value : values) {
-							if (value == null) {
-								continue;
+					Object value = queryContent.get(element.getName());
+					
+					if (value != null) {
+						String name = ValueUtils.getValue(AliasProperty.getInstance(), element.getProperties());
+						if (name == null) {
+							name = element.getName();
+						}
+						if (value instanceof Iterable) {
+							CollectionFormat collectionFormat = ValueUtils.getValue(CollectionFormatProperty.getInstance(), element.getProperties());
+							boolean firstValue = true;
+							for (Object single : (Iterable<?>) value) {
+								if (single == null) {
+									continue;
+								}
+								if (firstValue) {
+									if (first) {
+										first = false;
+										path += "?";
+									}
+									else {
+										path += "&";
+									}
+									path += escapeQuery(name) + "=";
+									// if it is multi, we want to keep appending the values as key=value
+									firstValue = CollectionFormat.MULTI.equals(collectionFormat);
+								}
+								else {
+									path += (collectionFormat == null ? CollectionFormat.CSV : collectionFormat).getCharacter();
+								}
+								path += escapeQuery(single instanceof String ? single.toString() : ConverterFactory.getInstance().getConverter().convert(single, String.class));
 							}
+						}
+						else {
 							if (first) {
 								first = false;
 								path += "?";
@@ -219,11 +257,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							else {
 								path += "&";
 							}
-							String name = ValueUtils.getValue(AliasProperty.getInstance(), element.getProperties());
-							if (name == null) {
-								name = element.getName();
-							}
-							path += name + "=" + value.replace("&", "&amp;");
+							path += escapeQuery(name) + "=" + escapeQuery(value instanceof String ? value.toString() : ConverterFactory.getInstance().getConverter().convert(value, String.class));
 						}
 					}
 				}
