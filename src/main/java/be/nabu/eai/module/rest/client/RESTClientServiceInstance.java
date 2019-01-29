@@ -26,6 +26,7 @@ import be.nabu.libs.services.api.ExecutionContext;
 import be.nabu.libs.services.api.Service;
 import be.nabu.libs.services.api.ServiceException;
 import be.nabu.libs.services.api.ServiceInstance;
+import be.nabu.libs.types.TypeUtils;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.Element;
@@ -142,14 +143,17 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			Object header = input == null ? null : input.get("header");
 			if (header instanceof ComplexContent) {
-				for (Element<?> element : ((ComplexContent) header).getType()) {
+				for (Element<?> element : TypeUtils.getAllChildren(((ComplexContent) header).getType())) {
 					Object values = ((ComplexContent) header).get(element.getName());
 					if (values instanceof Collection) {
 						for (Object value : (Collection<?>) values) {
 							if (value != null) {
-								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), value.toString()));
+								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(values, String.class)));
 							}
 						}
+					}
+					else {
+						part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(values, String.class)));
 					}
 				}
 			}
@@ -313,7 +317,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						if ("application/x-www-form-urlencoded".equalsIgnoreCase(responseContentType)) {
 							binding = new FormBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 						}
-						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)) {
+						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)
+								|| "application/problem+json".equalsIgnoreCase(responseContentType)) {
 							JSONBinding jsonBinding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 							// cfr
 							jsonBinding.setIgnoreRootIfArrayWrapper(true);
