@@ -148,7 +148,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					if (values instanceof Collection) {
 						for (Object value : (Collection<?>) values) {
 							if (value != null) {
-								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(values, String.class)));
+								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(value, String.class)));
 							}
 						}
 					}
