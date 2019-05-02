@@ -282,7 +282,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			
-			boolean isSecure = artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure();
+			boolean isSecure = uri == null ? artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure() : "https".equals(uri.getScheme());
 			HTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
