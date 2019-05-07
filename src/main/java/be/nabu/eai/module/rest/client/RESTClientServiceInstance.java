@@ -73,14 +73,14 @@ public class RESTClientServiceInstance implements ServiceInstance {
 	@Override
 	public ComplexContent execute(ExecutionContext executionContext, ComplexContent input) throws ServiceException {
 		try {
-			if (artifact.getConfiguration().getHost() == null) {
-				throw new ServiceException("REST-CLIENT-1", "No host configured for: " + artifact.getId());
-			}
-			if (artifact.getConfiguration().getPath() == null) {
-				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
-			}
 			Object object = input == null ? null : input.get("content");
 			URI uri = input == null ? null : (URI) input.get("endpoint");
+			if (artifact.getConfiguration().getHost() == null && uri == null) {
+				throw new ServiceException("REST-CLIENT-1", "No host configured for: " + artifact.getId());
+			}
+			if (artifact.getConfiguration().getPath() == null && uri == null) {
+				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
+			}
 			ModifiablePart part;
 			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
 			WebResponseType requestType = artifact.getConfiguration().getRequestType();
@@ -266,6 +266,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					}
 				}
 			}
+			
 			HTTPRequest request = new DefaultHTTPRequest(
 				artifact.getConfiguration().getMethod() == null ? "GET" : artifact.getConfiguration().getMethod().toString(),
 				path,
