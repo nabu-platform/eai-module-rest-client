@@ -309,4 +309,9 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 		}
 	}
 
+	@Override
+	public String getDescription() {
+		return getConfig().getDescription();
+	}
+	
 }

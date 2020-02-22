@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import be.nabu.eai.api.Advanced;
 import be.nabu.eai.api.EnvironmentSpecific;
+import be.nabu.eai.api.LargeText;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
 import be.nabu.eai.module.rest.WebAuthorizationType;
@@ -13,7 +14,7 @@ import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient", "description" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -21,7 +22,7 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private WebResponseType requestType, responseType;
 	private String charset;
 	private Boolean gzip;
-	private String host;
+	private String host, description;
 	private Boolean secure, sanitizeOutput;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	private Boolean validateInput, validateOutput;
@@ -135,6 +136,14 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	}
 	public void setLenient(boolean lenient) {
 		this.lenient = lenient;
+	}
+	
+	@LargeText
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	
 }
