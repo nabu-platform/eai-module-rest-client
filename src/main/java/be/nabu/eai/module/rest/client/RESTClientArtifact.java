@@ -3,6 +3,7 @@ package be.nabu.eai.module.rest.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,6 +16,9 @@ import org.slf4j.LoggerFactory;
 import be.nabu.eai.module.rest.RESTUtils;
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
+import be.nabu.libs.artifacts.ExternalDependencyImpl;
+import be.nabu.libs.artifacts.api.ExternalDependency;
+import be.nabu.libs.artifacts.api.ExternalDependencyArtifact;
 import be.nabu.libs.http.glue.GlueListener;
 import be.nabu.libs.property.api.Value;
 import be.nabu.libs.resources.api.ResourceContainer;
@@ -33,7 +37,7 @@ import be.nabu.libs.types.properties.MaxOccursProperty;
 import be.nabu.libs.types.properties.MinOccursProperty;
 import be.nabu.libs.types.structure.Structure;
 
-public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> implements DefinedService {
+public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> implements DefinedService, ExternalDependencyArtifact {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	
@@ -312,6 +316,33 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 	@Override
 	public String getDescription() {
 		return getConfig().getDescription();
+	}
+
+	@Override
+	public List<ExternalDependency> getExternalDependencies() {
+		List<ExternalDependency> dependencies = new ArrayList<ExternalDependency>();
+		ExternalDependencyImpl dependency = new ExternalDependencyImpl();
+		try {
+			dependency.setEndpoint(new URI(
+				getConfig().getSecure() != null && getConfig().getSecure() ? "https" : "http",
+				// authority, this includes the port
+				getConfig().getHost(),
+				getConfig().getPath(),
+				// query is only filled in at runtime
+				null,
+				// fragment is irrelevant?
+				null));
+		}
+		catch (URISyntaxException e) {
+			// can't help it...
+		}
+		dependency.setArtifactId(getId());
+		dependency.setMethod(getConfig().getMethod().name().toUpperCase());
+		dependency.setDescription(getConfig().getDescription());
+		dependency.setType("REST");
+		dependency.setCredentials(getConfig().getUsername());
+		dependencies.add(dependency);
+		return dependencies;
 	}
 	
 }
