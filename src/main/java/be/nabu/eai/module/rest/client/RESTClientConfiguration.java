@@ -9,9 +9,9 @@ import be.nabu.eai.api.EnvironmentSpecific;
 import be.nabu.eai.api.LargeText;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.RESTConfiguration;
-import be.nabu.eai.module.rest.WebAuthorizationType;
 import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
+import be.nabu.libs.http.api.WebAuthorizationType;
 
 @XmlRootElement(name = "restClient")
 @XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient", "description" })
