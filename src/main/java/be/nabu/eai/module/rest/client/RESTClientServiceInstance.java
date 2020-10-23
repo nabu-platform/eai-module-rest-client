@@ -300,7 +300,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						}
 					}
 				}
-				throw new ServiceException("REST-CLIENT-4", "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage() + (content == null ? "" : "\n" + new String(content)));
+				throw new ServiceException("REST-CLIENT-" + response.getCode(), "An error occurred on the remote server: [" + response.getCode() + "] " + response.getMessage() + (content == null ? "" : "\n" + new String(content)));
 			}
 			
 			ComplexContent output = artifact.getServiceInterface().getOutputDefinition().newInstance();
@@ -369,6 +369,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			return output;
+		}
+		catch (ServiceException e) {
+			throw e;
 		}
 		catch (Exception e) {
 			throw new ServiceException(e);
