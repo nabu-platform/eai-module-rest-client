@@ -75,15 +75,24 @@ public class RESTClientServiceInstance implements ServiceInstance {
 		try {
 			Object object = input == null ? null : input.get("content");
 			URI uri = input == null ? null : (URI) input.get("endpoint");
-			if (artifact.getConfiguration().getHost() == null && uri == null) {
+			
+			RESTEndpointArtifact endpoint = artifact.getConfig().getEndpoint();
+			
+			if (artifact.getConfiguration().getHost() == null && uri == null && (endpoint == null || endpoint.getConfig().getHost() == null)) {
 				throw new ServiceException("REST-CLIENT-1", "No host configured for: " + artifact.getId());
 			}
 			if (artifact.getConfiguration().getPath() == null && uri == null) {
 				throw new ServiceException("REST-CLIENT-2", "No path configured for: " + artifact.getId());
 			}
 			ModifiablePart part;
-			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : Charset.defaultCharset();
+			Charset charset = artifact.getConfiguration().getCharset() != null ? Charset.forName(artifact.getConfiguration().getCharset()) : 
+				(endpoint == null || endpoint.getConfig().getCharset() == null ? Charset.defaultCharset() : endpoint.getConfig().getCharset());
+			
 			WebResponseType requestType = artifact.getConfiguration().getRequestType();
+			if (requestType == null && endpoint != null) {
+				requestType = endpoint.getConfig().getRequestType();
+			}
+			
 			if (object instanceof InputStream) {
 				part = new PlainMimeContentPart(null, IOUtils.wrap((InputStream) object),
 					new MimeHeader("Content-Type", requestType == null ? "application/octet-stream" : requestType.getMimeType()),
@@ -106,8 +115,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					case FORM_ENCODED: binding = new FormBinding(((ComplexContent) object).getType()); break;
 					case JSON: 
 						JSONBinding jsonBinding = new JSONBinding(((ComplexContent) object).getType(), charset);
-						// TODO: make this configurable?
-						jsonBinding.setIgnoreRootIfArrayWrapper(true);
+						jsonBinding.setIgnoreRootIfArrayWrapper(artifact.getConfig().isIgnoreRootIfArrayWrapper());
 						// see below in XML binding
 						jsonBinding.setCamelCaseDashes(true);
 						binding = jsonBinding;
@@ -127,6 +135,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					new MimeHeader("Content-Length", Integer.valueOf(content.length).toString()),
 					new MimeHeader("Content-Type", requestType.getMimeType())
 				);
+				// reopenable parts can be reported on
+				((PlainMimeContentPart) part).setReopenable(true);
 			}
 			else if (object == null) {
 				part = new PlainMimeEmptyPart(null);
@@ -136,6 +146,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			
 			WebResponseType responseType = artifact.getConfiguration().getResponseType();
+			if (responseType == null && endpoint != null) {
+				responseType = endpoint.getConfig().getResponseType();
+			}
 			if (responseType == null) {
 				responseType = WebResponseType.XML;
 			}
@@ -158,17 +171,21 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 
-			if (artifact.getConfiguration().getGzip() != null && artifact.getConfiguration().getGzip()) {
+			if ((artifact.getConfiguration().getGzip() != null && artifact.getConfiguration().getGzip()) || (artifact.getConfig().getGzip() == null && endpoint != null && endpoint.getConfig().getGzip() != null && endpoint.getConfig().getGzip())) {
 				part.setHeader(new MimeHeader("Content-Encoding", "gzip"));
 				part.setHeader(new MimeHeader("Accept-Encoding", "gzip"));
 			}
-			part.setHeader(new MimeHeader("Host", uri == null || uri.getHost() == null ? artifact.getConfiguration().getHost() : uri.getAuthority()));
+			String host = uri == null || uri.getHost() == null ? artifact.getConfig().getHost() : uri.getAuthority();
+			if (host == null && endpoint != null) {
+				host = endpoint.getConfig().getHost();
+			}
+			part.setHeader(new MimeHeader("Host", host));
 			
-			final String username = input == null || input.get("authentication/username") == null ? artifact.getConfiguration().getUsername() : (String) input.get("authentication/username");
-			final String password = input == null || input.get("authentication/password") == null ? artifact.getConfiguration().getPassword() : (String) input.get("authentication/password");
+			final String username = input == null || input.get("authentication/username") == null ? (artifact.getConfiguration().getUsername() == null && endpoint != null ? endpoint.getConfig().getUsername() : artifact.getConfiguration().getUsername()) : (String) input.get("authentication/username");
+			final String password = input == null || input.get("authentication/password") == null ? (artifact.getConfiguration().getPassword() == null && endpoint != null ? endpoint.getConfig().getPassword() : artifact.getConfiguration().getPassword()) : (String) input.get("authentication/password");
 
 			// currently if preemptive is filled in, you can't do ntlm, only basic & bearer both of which don't support domain
-			boolean allowNtlm = artifact.getConfiguration().getPreemptiveAuthorizationType() == null;
+			boolean allowNtlm = artifact.getConfiguration().getPreemptiveAuthorizationType() == null && (endpoint == null || endpoint.getConfig().getPreemptiveAuthorizationType() == null);
 			
 			BasicPrincipal principal = null;
 			if (username != null) {
@@ -196,6 +213,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			
 			String path = uri == null || uri.getPath() == null ? "/" : uri.getPath();
+			if (endpoint != null && endpoint.getConfig().getBasePath() != null) {
+				path += "/" + endpoint.getConfig().getBasePath();
+				path = path.replaceAll("[/]{2,}", "/");
+			}
 			if (artifact.getConfiguration().getPath() != null) {
 				String configuredPath = artifact.getConfig().getPath();
 				if (configuredPath.startsWith("/")) {
@@ -218,8 +239,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			}
 			
 			ComplexContent queryContent = input == null ? null : (ComplexContent) input.get("query");
+			boolean firstQuery = path.indexOf('?') < 0;
 			if (queryContent != null) {
-				boolean first = path.indexOf('?') < 0;
 				for (Element<?> element : queryContent.getType()) {
 					Object value = queryContent.get(element.getName());
 					
@@ -236,8 +257,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 									continue;
 								}
 								if (firstValue) {
-									if (first) {
-										first = false;
+									if (firstQuery) {
+										firstQuery = false;
 										path += "?";
 									}
 									else {
@@ -254,8 +275,8 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							}
 						}
 						else {
-							if (first) {
-								first = false;
+							if (firstQuery) {
+								firstQuery = false;
 								path += "?";
 							}
 							else {
@@ -265,6 +286,33 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						}
 					}
 				}
+			}
+			// if we have an api query key, inject it
+			if (endpoint != null && endpoint.getConfig().getApiQueryKey() != null) {
+				String apiQueryName = endpoint.getConfig().getApiQueryName();
+				if (apiQueryName == null) {
+					apiQueryName = "apiKey";
+				}
+				if (firstQuery) {
+					firstQuery = false;
+					path += "?";
+				}
+				else {
+					path += "&";
+				}
+				path += apiQueryName + "=" + endpoint.getConfig().getApiQueryKey();
+			}
+			
+			if (endpoint != null && endpoint.getConfig().getUserAgent() != null) {
+				part.setHeader(new MimeHeader("User-Agent", endpoint.getConfig().getUserAgent()));
+			}
+			// if we have an api header key, inject it
+			if (endpoint != null && endpoint.getConfig().getApiHeaderKey() != null) {
+				String apiHeaderName = endpoint.getConfig().getApiHeaderName();
+				if (apiHeaderName == null) {
+					apiHeaderName = "apiKey";
+				}
+				part.setHeader(new MimeHeader(apiHeaderName, endpoint.getConfig().getApiHeaderKey()));
 			}
 			
 			HTTPRequest request = new DefaultHTTPRequest(
@@ -283,8 +331,17 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 			}
 			
-			boolean isSecure = uri == null ? artifact.getConfiguration().getSecure() != null && artifact.getConfiguration().getSecure() : "https".equals(uri.getScheme());
-			HTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient()).getClient();
+			boolean isSecure = false;
+			if (uri != null && uri.getScheme() != null) {
+				isSecure = "https".equalsIgnoreCase(uri.getScheme());
+			}
+			else if (artifact.getConfig().getSecure() != null) {
+				isSecure = artifact.getConfig().getSecure();
+			}
+			else if (endpoint != null && endpoint.getConfig().getSecure() != null) {
+				isSecure = endpoint.getConfig().getSecure();
+			}
+			HTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient() == null && endpoint != null ? endpoint.getConfig().getHttpClient() : artifact.getConfiguration().getHttpClient()).getClient();
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {
@@ -321,8 +378,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)
 								|| "application/problem+json".equalsIgnoreCase(responseContentType)) {
 							JSONBinding jsonBinding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
-							// cfr
-							jsonBinding.setIgnoreRootIfArrayWrapper(true);
+							jsonBinding.setIgnoreRootIfArrayWrapper(artifact.getConfig().isIgnoreRootIfArrayWrapper());
 							jsonBinding.setCamelCaseDashes(true);
 							// we allow dynamic types to be generated for parsing reasons but do not allow them to be added back into the type
 							// this necessitates that there is a key value array that can hold them

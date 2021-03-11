@@ -61,7 +61,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			@Override
 			public ComplexType getInputDefinition() {
 				if (input == null) {
-					synchronized(this) {
+					synchronized(RESTClientArtifact.this) {
 						if (input == null) {
 							rebuildInterface();
 						}
@@ -72,7 +72,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			@Override
 			public ComplexType getOutputDefinition() {
 				if (output == null) {
-					synchronized(this) {
+					synchronized(RESTClientArtifact.this) {
 						if (output == null) {
 							rebuildInterface();
 						}
@@ -337,7 +337,9 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			// can't help it...
 		}
 		dependency.setArtifactId(getId());
-		dependency.setMethod(getConfig().getMethod().name().toUpperCase());
+		if (getConfig().getMethod() != null) {
+			dependency.setMethod(getConfig().getMethod().name().toUpperCase());
+		}
 		dependency.setDescription(getConfig().getDescription());
 		dependency.setType("REST");
 		dependency.setCredentials(getConfig().getUsername());

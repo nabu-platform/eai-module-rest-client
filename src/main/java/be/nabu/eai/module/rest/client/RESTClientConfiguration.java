@@ -14,7 +14,7 @@ import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 import be.nabu.libs.http.api.WebAuthorizationType;
 
 @XmlRootElement(name = "restClient")
-@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient", "description" })
+@XmlType(propOrder = { "host", "secure", "httpClient", "preemptiveAuthorizationType", "username", "password", "requestType", "responseType", "charset", "gzip", "sanitizeOutput", "validateInput", "validateOutput", "lenient", "description", "ignoreRootIfArrayWrapper", "endpoint" })
 public class RESTClientConfiguration extends RESTConfiguration {
 	
 	private HTTPClientArtifact httpClient;
@@ -26,7 +26,11 @@ public class RESTClientConfiguration extends RESTConfiguration {
 	private Boolean secure, sanitizeOutput;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	private Boolean validateInput, validateOutput;
+	// for backwards compatibility it has to be true
+	private boolean ignoreRootIfArrayWrapper = true;
 	private boolean lenient = true;
+	
+	private RESTEndpointArtifact endpoint;
 	
 	@Advanced
 	@EnvironmentSpecific
@@ -146,4 +150,20 @@ public class RESTClientConfiguration extends RESTConfiguration {
 		this.description = description;
 	}
 	
+	@Advanced
+	public boolean isIgnoreRootIfArrayWrapper() {
+		return ignoreRootIfArrayWrapper;
+	}
+	public void setIgnoreRootIfArrayWrapper(boolean ignoreRootIfArrayWrapper) {
+		this.ignoreRootIfArrayWrapper = ignoreRootIfArrayWrapper;
+	}
+	
+	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
+	public RESTEndpointArtifact getEndpoint() {
+		return endpoint;
+	}
+	public void setEndpoint(RESTEndpointArtifact endpoint) {
+		this.endpoint = endpoint;
+	}
+
 }

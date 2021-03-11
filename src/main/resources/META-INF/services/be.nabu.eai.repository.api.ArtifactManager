@@ -1,1 +1,2 @@
 be.nabu.eai.module.rest.client.RESTClientManager
+be.nabu.eai.module.rest.client.RESTEndpointManager

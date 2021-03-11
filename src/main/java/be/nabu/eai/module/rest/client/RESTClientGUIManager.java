@@ -54,7 +54,7 @@ public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfigura
 
 	@Override
 	public String getCategory() {
-		return "Services";
+		return "REST";
 	}
 	
 	@Override
