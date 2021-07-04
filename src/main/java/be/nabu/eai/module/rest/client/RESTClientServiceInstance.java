@@ -14,6 +14,7 @@ import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.converter.ConverterFactory;
 import be.nabu.libs.http.api.HTTPRequest;
 import be.nabu.libs.http.api.HTTPResponse;
+import be.nabu.libs.http.api.WebAuthorizationType;
 import be.nabu.libs.http.api.client.HTTPClient;
 import be.nabu.libs.http.client.BasicAuthentication;
 import be.nabu.libs.http.client.NTLMPrincipalImpl;
@@ -320,8 +321,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				path,
 				part);
 			
-			if (artifact.getConfiguration().getPreemptiveAuthorizationType() != null && principal != null) {
-				switch(artifact.getConfiguration().getPreemptiveAuthorizationType()) {
+			WebAuthorizationType preemptiveAuthorizationType = artifact.getConfiguration().getPreemptiveAuthorizationType();
+			if (preemptiveAuthorizationType == null && endpoint != null) {
+				preemptiveAuthorizationType = endpoint.getConfig().getPreemptiveAuthorizationType();
+			}
+			
+			if (preemptiveAuthorizationType != null && principal != null) {
+				switch(preemptiveAuthorizationType) {
 					case BASIC:
 						request.getContent().setHeader(new MimeHeader(HTTPUtils.SERVER_AUTHENTICATE_RESPONSE, new BasicAuthentication().authenticate(principal, "basic")));
 					break;
@@ -376,7 +382,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							binding = new FormBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 						}
 						else if ("application/json".equalsIgnoreCase(responseContentType) || "application/javascript".equalsIgnoreCase(responseContentType) || "application/x-javascript".equalsIgnoreCase(responseContentType)
-								|| "application/problem+json".equalsIgnoreCase(responseContentType)) {
+								|| "application/problem+json".equalsIgnoreCase(responseContentType) || (responseContentType != null && responseContentType.matches("application/[\\w]+\\+json"))) {
 							JSONBinding jsonBinding = new JSONBinding((ComplexType) artifact.getConfiguration().getOutput(), charset);
 							jsonBinding.setIgnoreRootIfArrayWrapper(artifact.getConfig().isIgnoreRootIfArrayWrapper());
 							jsonBinding.setCamelCaseDashes(true);

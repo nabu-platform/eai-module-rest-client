@@ -3,10 +3,12 @@ package be.nabu.eai.module.rest.client;
 import java.nio.charset.Charset;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import be.nabu.eai.api.EnvironmentSpecific;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.WebResponseType;
+import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 import be.nabu.libs.http.api.WebAuthorizationType;
 
 @XmlRootElement(name = "restEndpoint")
@@ -19,12 +21,15 @@ public class RESTEndpointConfiguration {
 	private String apiHeaderName, apiQueryName;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	private WebResponseType requestType, responseType;
+	
+	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
 	public HTTPClientArtifact getHttpClient() {
 		return httpClient;
 	}
 	public void setHttpClient(HTTPClientArtifact httpClient) {
 		this.httpClient = httpClient;
 	}
+	
 	public Charset getCharset() {
 		return charset;
 	}
