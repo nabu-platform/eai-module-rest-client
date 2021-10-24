@@ -24,7 +24,7 @@ result/path = parameter(
 	
 result/secure = parameter(
 	name: "secure",
-	category: null,
+	category: "Basic",
 	title: null,
 	description: "Whether to use HTTPs or plain HTTP",
 	type: "boolean",
