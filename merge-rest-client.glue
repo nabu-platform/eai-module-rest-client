@@ -1,0 +1,77 @@
+result = xml.objectify(file.read("rest-client.xml"))
+
+tag("REST Client")
+
+result/host = parameter(
+	name: "host",
+	category: "Basic",
+	title: null,
+	description: "The remote host to use",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/host)/current
+	
+result/path = parameter(
+	name: "path",
+	category: "Basic",
+	title: null,
+	description: "The remote path to use",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/path)/current
+	
+result/secure = parameter(
+	name: "secure",
+	category: null,
+	title: null,
+	description: "Whether to use HTTPs or plain HTTP",
+	type: "boolean",
+	encrypted: false,
+	optional: true,
+	raw: result/secure)/current
+	
+result/httpClient = parameter(
+	name: "httpClient",
+	category: "Basic",
+	title: null,
+	description: "The http client that this rest client uses",
+	type: "artifact",
+	encrypted: false,
+	optional: true,
+	raw: result/httpClient)/current
+	
+result/username = parameter(
+	name: "username",
+	category: "Security",
+	title: null,
+	description: "The username for authentication",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/username)/current
+	
+result/password = parameter(
+	name: "password",
+	category: "Security",
+	title: null,
+	description: "The password for authentication",
+	type: "password",
+	encrypted: false,
+	optional: true,
+	raw: result/password)/current
+
+result/gzip = parameter(
+	name: "gzip",
+	category: null,
+	title: null,
+	description: "Whether or not to use gzip",
+	type: "boolean",
+	encrypted: false,
+	optional: true,
+	raw: result/gzip)/current
+	
+
+
+file.write("rest-client.xml", xml.stringify(result))

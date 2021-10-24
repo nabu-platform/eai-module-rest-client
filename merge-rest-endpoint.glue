@@ -1,0 +1,119 @@
+result = xml.objectify(file.read("rest-endpoint.xml"))
+
+tag("REST Client Endpoint")
+
+result/host = parameter(
+	name: "host",
+	category: "Basic",
+	title: null,
+	description: "The remote host to use",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/host)/current
+	
+result/basePath = parameter(
+	name: "basePath",
+	category: "Basic",
+	title: null,
+	description: "The base path will be prepended before any path configured in the rest clients that use this endpoint",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/basePath)/current
+	
+result/secure = parameter(
+	name: "secure",
+	category: null,
+	title: null,
+	description: "Whether to use HTTPs or plain HTTP",
+	type: "boolean",
+	encrypted: false,
+	optional: true,
+	raw: result/secure)/current
+	
+result/httpClient = parameter(
+	name: "httpClient",
+	category: "Basic",
+	title: null,
+	description: "The http client that this rest client uses",
+	type: "artifact",
+	encrypted: false,
+	optional: true,
+	raw: result/httpClient)/current
+	
+result/username = parameter(
+	name: "username",
+	category: "Security",
+	title: null,
+	description: "The username for authentication",
+	type: null,
+	encrypted: false,
+	optional: true,
+	raw: result/username)/current
+	
+result/password = parameter(
+	name: "password",
+	category: "Security",
+	title: null,
+	description: "The password for authentication",
+	type: "password",
+	encrypted: false,
+	optional: true,
+	raw: result/password)/current
+	
+result/apiHeaderName = parameter(
+	name: "apiHeaderName",
+	category: "Security",
+	title: null,
+	description: "If you want to pass an API key in the header, set the name of the header here",
+	type: null,
+	encrypted: false,
+	optional: true,
+	show: "apiQueryName == null",
+	raw: result/apiHeaderName)/current
+	
+result/apiQueryName = parameter(
+	name: "apiQueryName",
+	category: "Security",
+	title: null,
+	description: "If you want to pass an API key in the query parameters, set the name of the query parameter here",
+	type: null,
+	encrypted: false,
+	optional: true,
+	show: "apiHeaderName == null",
+	raw: result/apiQueryName)/current
+	
+result/apiQueryKey = parameter(
+	name: "apiQueryKey",
+	category: "Security",
+	title: null,
+	description: "The key to pass in the query parameters",
+	type: null,
+	encrypted: false,
+	optional: true,
+	show: "apiQueryName != null",
+	raw: result/apiQueryKey)/current
+	
+result/apiHeaderKey = parameter(
+	name: "apiHeaderKey",
+	category: "Security",
+	title: null,
+	description: "The key to pass in the header",
+	type: null,
+	encrypted: false,
+	optional: true,
+	show: "apiHeaderName != null",
+	raw: result/apiHeaderKey)/current
+
+result/gzip = parameter(
+	name: "gzip",
+	category: null,
+	title: null,
+	description: "Whether or not to use gzip",
+	type: "boolean",
+	encrypted: false,
+	optional: true,
+	raw: result/gzip)/current
+
+file.write("rest-endpoint.xml", xml.stringify(result))
