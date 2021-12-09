@@ -140,7 +140,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				((PlainMimeContentPart) part).setReopenable(true);
 			}
 			else if (object == null) {
-				part = new PlainMimeEmptyPart(null);
+				part = new PlainMimeEmptyPart(null, new MimeHeader("Content-Length", "0"));
 			}
 			else {
 				throw new ServiceException("REST-CLIENT-3", "Invalid content");
