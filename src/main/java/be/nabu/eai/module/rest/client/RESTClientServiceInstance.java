@@ -303,6 +303,17 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				}
 				path += apiQueryName + "=" + endpoint.getConfig().getApiQueryKey();
 			}
+			else if (endpoint != null && endpoint.getConfig().getApiQueryName() != null && endpoint.getConfig().getApiQueryKey() == null) {
+				String apiQueryKey = input == null ? null : (String) input.get("apiQueryKey");
+				if (firstQuery) {
+					firstQuery = false;
+					path += "?";
+				}
+				else {
+					path += "&";
+				}
+				path += endpoint.getConfig().getApiQueryName() + "=" + apiQueryKey;
+			}
 			
 			if (endpoint != null && endpoint.getConfig().getUserAgent() != null) {
 				part.setHeader(new MimeHeader("User-Agent", endpoint.getConfig().getUserAgent()));
@@ -314,6 +325,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 					apiHeaderName = "apiKey";
 				}
 				part.setHeader(new MimeHeader(apiHeaderName, endpoint.getConfig().getApiHeaderKey()));
+			}
+			// if we have a header configured in the endpoint but no fixed value, you have to pass it at runtime
+			else if (endpoint != null && endpoint.getConfig().getApiHeaderName() != null && endpoint.getConfig().getApiHeaderKey() == null) {
+				String apiHeaderKey = input == null ? null : (String) input.get("apiHeaderKey");
+				if (apiHeaderKey != null) {
+					part.setHeader(new MimeHeader(endpoint.getConfig().getApiHeaderName(), apiHeaderKey));	
+				}
 			}
 			
 			HTTPRequest request = new DefaultHTTPRequest(

@@ -187,6 +187,7 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 		Structure responseHeader = getResponseHeader();
 		Structure authentication = new Structure();
 		try {
+			RESTEndpointArtifact endpoint = getConfig().getEndpoint();
 			// input
 			input.setName("input");
 			input.add(new SimpleElementImpl<String>("transactionId", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
@@ -244,8 +245,19 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			else {
 				removeAll(requestHeader);
 			}
-			if (getConfiguration().getPath() != null) {
-				List<String> names = GlueListener.analyzePath(getConfiguration().getPath()).getParameters();
+			String pathToAnalyze = getConfig().getPath();
+			// if it is not simply the root, we want to add the base path as well
+			if (endpoint != null && endpoint.getConfig().getBasePath() != null && !endpoint.getConfig().getBasePath().trim().equals("/")) {
+				if (pathToAnalyze == null) {
+					pathToAnalyze = endpoint.getConfig().getBasePath();
+				}
+				else {
+					// remove doubles we might have introduced with the hard concatting
+					pathToAnalyze = (endpoint.getConfig().getBasePath() + "/" + pathToAnalyze).replaceAll("[/]{2,}", "/");
+				}
+			}
+			if (pathToAnalyze != null) {
+				List<String> names = GlueListener.analyzePath(pathToAnalyze).getParameters();
 				List<String> available = removeUnused(path, names);
 				for (String name : names) {
 					if (!available.contains(name)) {
@@ -269,6 +281,13 @@ public class RESTClientArtifact extends JAXBArtifact<RESTClientConfiguration> im
 			authentication.add(new SimpleElementImpl<String>("username", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
 			authentication.add(new SimpleElementImpl<String>("password", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), authentication, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
 			input.add(new ComplexElementImpl("authentication", authentication, input, new ValueImpl<Integer>(MinOccursProperty.getInstance(), 0)));
+			
+			if (endpoint != null && endpoint.getConfig().getApiHeaderName() != null && endpoint.getConfig().getApiHeaderKey() == null) {
+				input.add(new SimpleElementImpl<String>("apiHeaderKey", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), input));
+			}
+			if (endpoint != null && endpoint.getConfig().getApiQueryName() != null && endpoint.getConfig().getApiQueryKey() == null) {
+				input.add(new SimpleElementImpl<String>("apiQueryKey", SimpleTypeWrapperFactory.getInstance().getWrapper().wrap(String.class), input));
+			}
 			
 			// output
 			output.setName("output");
