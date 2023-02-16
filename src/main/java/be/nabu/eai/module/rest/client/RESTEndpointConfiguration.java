@@ -6,10 +6,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import be.nabu.eai.api.EnvironmentSpecific;
+import be.nabu.eai.api.ValueEnumerator;
+import be.nabu.eai.developer.impl.HTTPAuthenticatorEnumerator;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
 import be.nabu.libs.http.api.WebAuthorizationType;
+import be.nabu.libs.types.api.annotation.Field;
 
 @XmlRootElement(name = "restEndpoint")
 public class RESTEndpointConfiguration {
@@ -21,6 +24,11 @@ public class RESTEndpointConfiguration {
 	private String apiHeaderName, apiQueryName;
 	private WebAuthorizationType preemptiveAuthorizationType;
 	private WebResponseType requestType, responseType;
+	// the type of the security needed (depends on whats available)
+	private String securityType;
+	// the security context within that type
+	private String securityContext;
+
 	
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
 	public HTTPClientArtifact getHttpClient() {
@@ -36,6 +44,7 @@ public class RESTEndpointConfiguration {
 	public void setCharset(Charset charset) {
 		this.charset = charset;
 	}
+	@Field(group = "security")
 	@EnvironmentSpecific
 	public String getUsername() {
 		return username;
@@ -43,6 +52,7 @@ public class RESTEndpointConfiguration {
 	public void setUsername(String username) {
 		this.username = username;
 	}
+	@Field(group = "security")
 	@EnvironmentSpecific
 	public String getPassword() {
 		return password;
@@ -56,6 +66,7 @@ public class RESTEndpointConfiguration {
 	public void setUserAgent(String userAgent) {
 		this.userAgent = userAgent;
 	}
+	@Field(group = "security")
 	@EnvironmentSpecific
 	public String getApiHeaderKey() {
 		return apiHeaderKey;
@@ -63,6 +74,7 @@ public class RESTEndpointConfiguration {
 	public void setApiHeaderKey(String apiHeaderKey) {
 		this.apiHeaderKey = apiHeaderKey;
 	}
+	@Field(group = "security")
 	@EnvironmentSpecific
 	public String getApiQueryKey() {
 		return apiQueryKey;
@@ -90,12 +102,14 @@ public class RESTEndpointConfiguration {
 	public void setBasePath(String basePath) {
 		this.basePath = basePath;
 	}
+	@Field(group = "security")
 	public String getApiHeaderName() {
 		return apiHeaderName;
 	}
 	public void setApiHeaderName(String apiHeaderName) {
 		this.apiHeaderName = apiHeaderName;
 	}
+	@Field(group = "security")
 	public String getApiQueryName() {
 		return apiQueryName;
 	}
@@ -127,5 +141,21 @@ public class RESTEndpointConfiguration {
 	public void setSecure(Boolean secure) {
 		this.secure = secure;
 	}
+	@Field(group = "security", comment = "Use a pluggable security provider")
+	@ValueEnumerator(enumerator = HTTPAuthenticatorEnumerator.class)
+	public String getSecurityType() {
+		return securityType;
+	}
+	public void setSecurityType(String securityType) {
+		this.securityType = securityType;
+	}
+	@Field(show = "securityType != null", group = "security", comment = "The context for the pluggable security provider")
+	public String getSecurityContext() {
+		return securityContext;
+	}
+	public void setSecurityContext(String securityContext) {
+		this.securityContext = securityContext;
+	}
+	
 	
 }

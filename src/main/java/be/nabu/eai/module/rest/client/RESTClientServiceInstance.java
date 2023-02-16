@@ -7,6 +7,8 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.NotSupportedException;
+
 import nabu.protocols.http.client.Services;
 import be.nabu.eai.module.rest.RESTUtils;
 import be.nabu.eai.module.rest.WebResponseType;
@@ -19,6 +21,7 @@ import be.nabu.libs.http.api.client.HTTPClient;
 import be.nabu.libs.http.client.BasicAuthentication;
 import be.nabu.libs.http.client.NTLMPrincipalImpl;
 import be.nabu.libs.http.core.DefaultHTTPRequest;
+import be.nabu.libs.http.core.HTTPRequestAuthenticatorFactory;
 import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.http.glue.GlueListener;
 import be.nabu.libs.property.ValueUtils;
@@ -268,6 +271,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 								if (single == null) {
 									continue;
 								}
+								else if (single instanceof ComplexContent) {
+									// TODO: in openapi 3 there are rules for serializing complex content
+									throw new NotSupportedException("Complex content is not yet supported in the query parameter");
+								}
 								if (firstValue) {
 									if (firstQuery) {
 										firstQuery = false;
@@ -276,7 +283,23 @@ public class RESTClientServiceInstance implements ServiceInstance {
 									else {
 										path += "&";
 									}
-									path += escapeQuery(name) + "=";
+									// need to start with ";"
+									if (CollectionFormat.MATRIX_IMPLODE.equals(collectionFormat)) {
+										path += ";";
+										// the rest is CSV compatible for arrays
+										collectionFormat = CollectionFormat.CSV;
+									}
+									else if (CollectionFormat.MATRIX_EXPLODE.equals(collectionFormat)) {
+										path += ";";
+										collectionFormat = CollectionFormat.MULTI;
+									}
+									// for label formatting, we don't need the actual key
+									if (CollectionFormat.LABEL.equals(collectionFormat)) {
+										path += ".";
+									}
+									else {
+										path += escapeQuery(name) + "=";
+									}
 									// if it is multi, we want to keep appending the values as key=value
 									firstValue = CollectionFormat.MULTI.equals(collectionFormat);
 								}
@@ -285,6 +308,10 @@ public class RESTClientServiceInstance implements ServiceInstance {
 								}
 								path += escapeQuery(single instanceof String ? single.toString() : ConverterFactory.getInstance().getConverter().convert(single, String.class));
 							}
+						}
+						else if (value instanceof ComplexContent) {
+							// TODO: in openapi 3 there are rules for serializing complex content
+							throw new NotSupportedException("Complex content is not yet supported in the query parameter");
 						}
 						else {
 							if (firstQuery) {
@@ -349,6 +376,13 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				artifact.getConfiguration().getMethod() == null ? "GET" : artifact.getConfiguration().getMethod().toString(),
 				path,
 				part);
+			
+			if (artifact.getConfig().getEndpoint() != null && artifact.getConfig().getEndpoint().getConfig().getSecurityType() != null) {
+				if (!HTTPRequestAuthenticatorFactory.getInstance().getAuthenticator(artifact.getConfig().getEndpoint().getConfig().getSecurityType())
+						.authenticate(request, artifact.getConfig().getEndpoint().getConfig().getSecurityType(), null, false)) {
+					throw new IllegalStateException("Could not authenticate the request");
+				}
+			}
 			
 			WebAuthorizationType preemptiveAuthorizationType = artifact.getConfiguration().getPreemptiveAuthorizationType();
 			if (preemptiveAuthorizationType == null && endpoint != null) {
