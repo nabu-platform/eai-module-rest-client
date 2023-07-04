@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -99,7 +100,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			if (object instanceof InputStream) {
 				part = new PlainMimeContentPart(null, IOUtils.wrap((InputStream) object),
-					new MimeHeader("Content-Type", requestType == null ? "application/octet-stream" : requestType.getMimeType()),
+						// @2023-07-04 used to be: requestType == null ? "application/octet-stream" : requestType.getMimeType()
+						// The problem is, if you are using input streams, it is likely you are _not_ sending the default "json" or "xml" stuff. If you are, you can always add an explicit content-type header
+					new MimeHeader("Content-Type", "application/octet-stream"),
 					new MimeHeader("Transfer-Encoding", "Chunked")
 				);
 			}
@@ -161,21 +164,41 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			Object header = input == null ? null : input.get("header");
 			if (header instanceof ComplexContent) {
 				for (Element<?> element : TypeUtils.getAllChildren(((ComplexContent) header).getType())) {
+					String alias = ValueUtils.getValue(AliasProperty.getInstance(), element.getProperties());
+					if (alias == null) {
+						alias = RESTUtils.fieldToHeader(element.getName());
+					}
+					// remove previously set content type headers
+					if (alias.equalsIgnoreCase("Content-Type")) {
+						part.removeHeader(alias);
+					}
 					Object values = ((ComplexContent) header).get(element.getName());
 					if (values instanceof Collection) {
 						for (Object value : (Collection<?>) values) {
 							if (value != null) {
-								part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(value, String.class)));
+								part.setHeader(new MimeHeader(alias, ConverterFactory.getInstance().getConverter().convert(value, String.class)));
 							}
 						}
 					}
 					else {
-						part.setHeader(new MimeHeader(RESTUtils.fieldToHeader(element.getName()), ConverterFactory.getInstance().getConverter().convert(values, String.class)));
+						part.setHeader(new MimeHeader(alias, ConverterFactory.getInstance().getConverter().convert(values, String.class)));
+					}
+					// if we pass in a content length at the application level, unset any transfer encoding
+					// note that it can get re-added if gzip is toggled
+					if (alias.equalsIgnoreCase("Content-Length") && values != null) {
+						part.removeHeader("Transfer-Encoding");
 					}
 				}
 			}
 
-			if ((artifact.getConfiguration().getGzip() != null && artifact.getConfiguration().getGzip()) || (artifact.getConfig().getGzip() == null && endpoint != null && endpoint.getConfig().getGzip() != null && endpoint.getConfig().getGzip())) {
+			boolean gzip = false;
+			if (artifact.getConfiguration().getGzip() != null) {
+				gzip = artifact.getConfiguration().getGzip();
+			}
+			else if (endpoint != null && endpoint.getConfig().getGzip() != null) {
+				gzip = endpoint.getConfig().getGzip();
+			}
+			if (gzip) {
 				Long contentLength = MimeUtils.getContentLength(part.getHeaders());
 				// if we don't have a content length, we are already chunking and want to gzip as well
 				// if we have a content length and it is non-zero, we have content that needs gzipping as well
@@ -379,7 +402,7 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			
 			if (artifact.getConfig().getEndpoint() != null && artifact.getConfig().getEndpoint().getConfig().getSecurityType() != null) {
 				if (!HTTPRequestAuthenticatorFactory.getInstance().getAuthenticator(artifact.getConfig().getEndpoint().getConfig().getSecurityType())
-						.authenticate(request, artifact.getConfig().getEndpoint().getConfig().getSecurityType(), null, false)) {
+						.authenticate(request, artifact.getConfig().getEndpoint().getConfig().getSecurityContext(), null, false)) {
 					throw new IllegalStateException("Could not authenticate the request");
 				}
 			}
