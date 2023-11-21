@@ -490,18 +490,23 @@ public class RESTClientServiceInstance implements ServiceInstance {
 							}
 							binding = xmlBinding;
 						}
-						ComplexContent unmarshal = binding.unmarshal(IOUtils.toInputStream(((ContentPart) response.getContent()).getReadable()), new Window[0]);
-						if (artifact.getConfig().getValidateOutput() != null && artifact.getConfig().getValidateOutput()) {
-							Validator validator = unmarshal.getType().createValidator();
-							List validations = validator.validate(unmarshal);
-							if (validations != null && !validations.isEmpty()) {
-								throw new ServiceException("REST-CLIENT-6", "The returned content from the server is invalid: " + validations);
+						if (response.getCode() != 204) {
+							ReadableContainer<ByteBuffer> readable = ((ContentPart) response.getContent()).getReadable();
+							if (readable != null) {
+								ComplexContent unmarshal = binding.unmarshal(IOUtils.toInputStream(readable), new Window[0]);
+								if (artifact.getConfig().getValidateOutput() != null && artifact.getConfig().getValidateOutput()) {
+									Validator validator = unmarshal.getType().createValidator();
+									List validations = validator.validate(unmarshal);
+									if (validations != null && !validations.isEmpty()) {
+										throw new ServiceException("REST-CLIENT-6", "The returned content from the server is invalid: " + validations);
+									}
+								}
+								if (artifact.getConfiguration().getSanitizeOutput() != null && artifact.getConfiguration().getSanitizeOutput()) {
+									unmarshal = (ComplexContent) GlueListener.sanitize(unmarshal);
+								}
+								output.set("content", unmarshal);
 							}
 						}
-						if (artifact.getConfiguration().getSanitizeOutput() != null && artifact.getConfiguration().getSanitizeOutput()) {
-							unmarshal = (ComplexContent) GlueListener.sanitize(unmarshal);
-						}
-						output.set("content", unmarshal);
 					}
 				}
 				Element<?> element = output.getType().get("header");
