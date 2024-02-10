@@ -35,6 +35,7 @@ import be.nabu.libs.types.TypeUtils;
 import be.nabu.libs.types.api.ComplexContent;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.Element;
+import be.nabu.libs.types.api.Marshallable;
 import be.nabu.libs.types.base.CollectionFormat;
 import be.nabu.libs.types.binding.api.MarshallableBinding;
 import be.nabu.libs.types.binding.api.UnmarshallableBinding;
@@ -268,7 +269,19 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				if (pathContent != null) {
 					for (Element<?> child : pathContent.getType()) {
 						Object value = pathContent.get(child.getName());
-						path = path.replaceAll("\\{[\\s]*" + child.getName() + "\\b[^}]*\\}", value == null ? "" : value.toString());
+						String stringified = "";
+						if (value != null) {
+							if (value instanceof String) {
+								stringified = (String) value;
+							}
+							else if (child.getType() instanceof Marshallable) {
+								stringified = ((Marshallable) child.getType()).marshal(value, child.getProperties());
+							}
+							else {
+								stringified = ConverterFactory.getInstance().getConverter().convert(value, String.class);
+							}
+						}
+						path = path.replaceAll("\\{[\\s]*" + child.getName() + "\\b[^}]*\\}", value == null ? "" : stringified);
 					}
 				}
 				if (!path.startsWith("/")) {
@@ -329,7 +342,19 @@ public class RESTClientServiceInstance implements ServiceInstance {
 								else {
 									path += (collectionFormat == null ? CollectionFormat.CSV : collectionFormat).getCharacter();
 								}
-								path += escapeQuery(single instanceof String ? single.toString() : ConverterFactory.getInstance().getConverter().convert(single, String.class));
+								String stringified = "";
+								if (single != null) {
+									if (single instanceof String) {
+										stringified = (String) single;
+									}
+									else if (element.getType() instanceof Marshallable) {
+										stringified = ((Marshallable) element.getType()).marshal(single, element.getProperties());
+									}
+									else {
+										stringified = ConverterFactory.getInstance().getConverter().convert(single, String.class);
+									}
+								}
+								path += escapeQuery(stringified);
 							}
 						}
 						else if (value instanceof ComplexContent) {
@@ -434,6 +459,16 @@ public class RESTClientServiceInstance implements ServiceInstance {
 				isSecure = endpoint.getConfig().getSecure();
 			}
 			HTTPClient client = Services.getTransactionable(executionContext, input == null ? null : (String) input.get("transactionId"), artifact.getConfiguration().getHttpClient() == null && endpoint != null ? endpoint.getConfig().getHttpClient() : artifact.getConfiguration().getHttpClient()).getClient();
+			
+			if (endpoint != null && endpoint.getConfig().isOmitContentLengthIfEmpty()) {
+				if (request.getMethod().equalsIgnoreCase("GET")) {
+					Header contentLengthHeader = MimeUtils.getHeader("Content-Length", request.getContent().getHeaders());
+					if (contentLengthHeader != null && "0".equals(contentLengthHeader.getValue())) {
+						request.getContent().removeHeader("Content-Length");
+					}
+				}
+			}
+			
 			HTTPResponse response = client.execute(request, principal, isSecure, true);
 			
 			if (response.getCode() < 200 || response.getCode() >= 300) {

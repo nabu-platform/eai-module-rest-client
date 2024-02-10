@@ -11,6 +11,7 @@ import be.nabu.eai.developer.impl.HTTPAuthenticatorEnumerator;
 import be.nabu.eai.module.http.client.HTTPClientArtifact;
 import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.eai.repository.jaxb.ArtifactXMLAdapter;
+import be.nabu.eai.repository.jaxb.CharsetAdapter;
 import be.nabu.libs.http.api.WebAuthorizationType;
 import be.nabu.libs.types.api.annotation.Field;
 
@@ -28,7 +29,10 @@ public class RESTEndpointConfiguration {
 	private String securityType;
 	// the security context within that type
 	private String securityContext;
-
+	
+	// some servers (notably the figma API) can not handle a content-length: 0 header on a get request
+	// https://forum.figma.com/t/api-poor-response-bad-request/48474/5
+	private boolean omitContentLengthIfEmpty;
 	
 	@XmlJavaTypeAdapter(value = ArtifactXMLAdapter.class)
 	public HTTPClientArtifact getHttpClient() {
@@ -38,12 +42,14 @@ public class RESTEndpointConfiguration {
 		this.httpClient = httpClient;
 	}
 	
+	@XmlJavaTypeAdapter(value = CharsetAdapter.class)
 	public Charset getCharset() {
 		return charset;
 	}
 	public void setCharset(Charset charset) {
 		this.charset = charset;
 	}
+	
 	@Field(group = "security")
 	@EnvironmentSpecific
 	public String getUsername() {
@@ -156,6 +162,11 @@ public class RESTEndpointConfiguration {
 	public void setSecurityContext(String securityContext) {
 		this.securityContext = securityContext;
 	}
-	
-	
+	@Field(group = "advanced", comment = "Remove the Content Length header if we are sending an empty request")
+	public boolean isOmitContentLengthIfEmpty() {
+		return omitContentLengthIfEmpty;
+	}
+	public void setOmitContentLengthIfEmpty(boolean omitContentLengthIfEmpty) {
+		this.omitContentLengthIfEmpty = omitContentLengthIfEmpty;
+	}
 }
