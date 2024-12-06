@@ -51,6 +51,7 @@ import be.nabu.libs.types.properties.MinLengthProperty;
 import be.nabu.libs.types.properties.MinOccursProperty;
 import be.nabu.libs.types.properties.PatternProperty;
 import be.nabu.libs.types.properties.TimezoneProperty;
+import be.nabu.libs.types.properties.UUIDFormatProperty;
 import be.nabu.libs.types.structure.Structure;
 
 public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfiguration, RESTClientArtifact> {
@@ -109,6 +110,7 @@ public class RESTClientGUIManager extends BaseJAXBGUIManager<RESTClientConfigura
 			LanguageProperty.getInstance(),
 			CountryProperty.getInstance(),
 			CollectionFormatProperty.getInstance(),
+			UUIDFormatProperty.getInstance(),
 			new MinInclusiveProperty(),
 			new MaxInclusiveProperty(),
 			new MinExclusiveProperty(),
