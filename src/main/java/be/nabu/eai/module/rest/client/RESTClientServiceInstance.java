@@ -182,15 +182,19 @@ public class RESTClientServiceInstance implements ServiceInstance {
 			Object header = input == null ? null : input.get("header");
 			if (header instanceof ComplexContent) {
 				for (Element<?> element : TypeUtils.getAllChildren(((ComplexContent) header).getType())) {
+					Object values = ((ComplexContent) header).get(element.getName());
+					// nothing to do...
+					if (values == null) {
+						continue;
+					}
 					String alias = ValueUtils.getValue(AliasProperty.getInstance(), element.getProperties());
 					if (alias == null) {
 						alias = RESTUtils.fieldToHeader(element.getName());
 					}
 					// remove previously set content type headers
-					if (alias.equalsIgnoreCase("Content-Type")) {
+					if (alias.equalsIgnoreCase("Content-Type") || alias.equalsIgnoreCase("Accept")) {
 						part.removeHeader(alias);
 					}
-					Object values = ((ComplexContent) header).get(element.getName());
 					if (values instanceof Collection) {
 						for (Object value : (Collection<?>) values) {
 							if (value != null) {
