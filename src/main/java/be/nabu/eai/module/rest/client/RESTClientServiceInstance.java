@@ -29,6 +29,7 @@ import javax.ws.rs.NotSupportedException;
 
 import nabu.protocols.http.client.Services;
 import be.nabu.eai.module.rest.RESTUtils;
+import be.nabu.eai.module.rest.WebMethod;
 import be.nabu.eai.module.rest.WebResponseType;
 import be.nabu.libs.authentication.api.principals.BasicPrincipal;
 import be.nabu.libs.converter.ConverterFactory;
@@ -143,6 +144,9 @@ public class RESTClientServiceInstance implements ServiceInstance {
 						jsonBinding.setIgnoreRootIfArrayWrapper(artifact.getConfig().isIgnoreRootIfArrayWrapper());
 						// see below in XML binding
 						jsonBinding.setCamelCaseDashes(true);
+						// for PATCH services we want to explicitly set "null" values for optional fields if we mapped it
+						// TODO: might want to allow the user to set this explicitly for non-PATCH methods, e.g. in case of wrong method usage (PUT vs PATCH)
+						jsonBinding.setMarshalExplicitNullValues(WebMethod.PATCH.equals(artifact.getConfig().getMethod()));
 						binding = jsonBinding;
 					break;
 					default: 
